@@ -5,7 +5,6 @@
   wallet .json file.
 
   TODO:
-  -Add BIP44 support
 */
 
 "use strict"
