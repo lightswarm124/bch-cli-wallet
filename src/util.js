@@ -18,7 +18,7 @@ util.inspect.defaultOptions = {
   depth: 1
 }
 
-const BB = require("bitbox-sdk")
+const BB = require("bitbox-sdk").BITBOX
 const BITBOX = new BB({ restURL: "https://rest.bitcoin.com/v2/" })
 
 class AppUtils {
