@@ -10,7 +10,7 @@ const sinon = require("sinon")
 // File under test.
 const AppUtils = require("../../src/util")
 
-const BB = require("bitbox-sdk")
+const BB = require("bitbox-sdk").BITBOX
 const REST_URL = { restURL: "https://trest.bitcoin.com/v2/" }
 
 // Mocking data
