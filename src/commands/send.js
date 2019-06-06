@@ -14,7 +14,7 @@
 
 "use strict"
 
-const BB = require("bitbox-sdk")
+const BB = require("bitbox-sdk").BITBOX
 const BITBOX = new BB({ restURL: "https://rest.bitcoin.com/v2/" })
 
 const GetAddress = require("./get-address")
