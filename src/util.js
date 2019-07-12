@@ -121,11 +121,11 @@ class AppUtils {
   // or throws an error.
   async broadcastTx(hex) {
     try {
-      const txid = await this.BITBOX.RawTransactions.sendRawTransaction(hex)
+      const txid = await this.BITBOX.RawTransactions.sendRawTransaction([hex])
 
       return txid
     } catch (err) {
-      console.log(`Error in send.js/broadcastTx()`)
+      console.log(`Error in util.js/broadcastTx()`)
       throw err
     }
   }
