@@ -125,7 +125,7 @@ class AppUtils {
 
       return txid
     } catch (err) {
-      console.log(`Error in send.js/broadcastTx()`)
+      console.log(`Error in util.js/broadcastTx()`)
       throw err
     }
   }
