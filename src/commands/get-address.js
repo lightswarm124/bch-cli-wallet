@@ -14,8 +14,15 @@ const qrcode = require("qrcode-terminal")
 const AppUtils = require("../util")
 const appUtils = new AppUtils()
 
+const MAIN_REST = `https://rest.bitcoin.com/v2/`
+const TEST_REST = `https://trest.bitcoin.com/v2/`
+
 const BB = require("slp-sdk")
-const BITBOX = new BB({ restURL: "https://rest.bitcoin.com/v2/" })
+const BITBOX = new BB({ restURL: MAIN_REST })
+
+// Used for debugging and iterrogating JS objects.
+const util = require("util")
+util.inspect.defaultOptions = { depth: 2 }
 
 const { Command, flags } = require("@oclif/command")
 
@@ -36,8 +43,7 @@ class GetAddress extends Command {
       this.validateFlags(flags)
 
       // Determine if this is a testnet wallet or a mainnet wallet.
-      if (flags.testnet)
-        this.BITBOX = new BB({ restURL: "https://trest.bitcoin.com/v2/" })
+      if (flags.testnet) this.BITBOX = new BB({ restURL: TEST_REST })
 
       // Generate an absolute filename from the name.
       const filename = `${__dirname}/../../wallets/${flags.name}.json`
@@ -58,29 +64,34 @@ class GetAddress extends Command {
 
   async getAddress(filename, flags) {
     //const filename = `${__dirname}/../../wallets/${name}.json`
+
     const walletInfo = appUtils.openWallet(filename)
     //console.log(`walletInfo: ${JSON.stringify(walletInfo, null, 2)}`)
 
     // Point to the correct rest server.
     if (walletInfo.network === "testnet")
-      this.BITBOX = new BB({ restURL: "https://trest.bitcoin.com/v2/" })
+      this.BITBOX = new BB({ restURL: TEST_REST })
+    else this.BITBOX = new BB({ restURL: MAIN_REST })
 
     // root seed buffer
     const rootSeed = this.BITBOX.Mnemonic.toSeed(walletInfo.mnemonic)
 
     // master HDNode
+    let masterHDNode
     if (walletInfo.network === "testnet")
-      var masterHDNode = this.BITBOX.HDNode.fromSeed(rootSeed, "testnet")
-    else var masterHDNode = this.BITBOX.HDNode.fromSeed(rootSeed)
+      masterHDNode = this.BITBOX.HDNode.fromSeed(rootSeed, "testnet")
+    else masterHDNode = this.BITBOX.HDNode.fromSeed(rootSeed)
 
     // HDNode of BIP44 account
     const account = this.BITBOX.HDNode.derivePath(masterHDNode, "m/44'/145'/0'")
+    //console.log(`account: ${util.inspect(account)}`)
 
     // derive an external change address HDNode
     const change = this.BITBOX.HDNode.derivePath(
       account,
       `0/${walletInfo.nextAddress}`
     )
+    //console.log(`change: ${util.inspect(change)}`)
 
     // Increment to point to a new address for next time.
     walletInfo.nextAddress++
@@ -90,15 +101,12 @@ class GetAddress extends Command {
 
     // get the cash address
     let newAddress = this.BITBOX.HDNode.toCashAddress(change)
-    //const legacy = BITBOX.HDNode.toLegacyAddress(change)
+    //let newAddress = BITBOX.HDNode.toLegacyAddress(change)
+    //console.log(`newAddress: ${JSON.stringify(newAddress, null, 2)}`)
 
     // Convert to a simpleledger: address if token flag is passed.
-    console.log(`flags: ${JSON.stringify(flags, null, 2)}`)
-    if (flags.token) {
-      console.log(`initial address: ${newAddress}`)
-
+    if (flags && flags.token)
       newAddress = this.BITBOX.Address.toSLPAddress(newAddress)
-    }
 
     return newAddress
   }

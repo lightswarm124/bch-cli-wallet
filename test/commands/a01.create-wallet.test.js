@@ -9,7 +9,7 @@ const assert = require("chai").assert
 const CreateWallet = require("../../src/commands/create-wallet")
 const { bitboxMock } = require("../mocks/bitbox")
 
-const BB = require("bitbox-sdk").BITBOX
+const BB = require("slp-sdk")
 const REST_URL = { restURL: "https://trest.bitcoin.com/v2/" }
 
 // Inspect utility used for debugging.
