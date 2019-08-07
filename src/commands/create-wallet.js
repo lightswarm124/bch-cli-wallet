@@ -1,9 +1,14 @@
+/*
+  Creates a new HD wallet. Save the 12-word Mnemonic private key to a .json file.
+  https://developer.bitcoin.com/mastering-bitcoin-cash/3-keys-addresses-wallets/#mnemonic-code-words
+*/
+
 "use strict"
 
 const AppUtils = require("../util")
 const appUtils = new AppUtils()
 
-const BB = require("bitbox-sdk").BITBOX
+const BB = require("slp-sdk")
 const BITBOX = new BB({ restURL: "https://rest.bitcoin.com/v2/" })
 
 const { Command, flags } = require("@oclif/command")

@@ -14,7 +14,7 @@ const qrcode = require("qrcode-terminal")
 const AppUtils = require("../util")
 const appUtils = new AppUtils()
 
-const BB = require("bitbox-sdk").BITBOX
+const BB = require("slp-sdk")
 const BITBOX = new BB({ restURL: "https://rest.bitcoin.com/v2/" })
 
 const { Command, flags } = require("@oclif/command")
@@ -42,7 +42,7 @@ class GetAddress extends Command {
       // Generate an absolute filename from the name.
       const filename = `${__dirname}/../../wallets/${flags.name}.json`
 
-      const newAddress = await this.getAddress(filename)
+      const newAddress = await this.getAddress(filename, flags)
 
       // Display the address as a QR code.
       qrcode.generate(newAddress, { small: true })
@@ -56,10 +56,14 @@ class GetAddress extends Command {
     }
   }
 
-  async getAddress(filename) {
+  async getAddress(filename, flags) {
     //const filename = `${__dirname}/../../wallets/${name}.json`
     const walletInfo = appUtils.openWallet(filename)
     //console.log(`walletInfo: ${JSON.stringify(walletInfo, null, 2)}`)
+
+    // Point to the correct rest server.
+    if (walletInfo.network === "testnet")
+      this.BITBOX = new BB({ restURL: "https://trest.bitcoin.com/v2/" })
 
     // root seed buffer
     const rootSeed = this.BITBOX.Mnemonic.toSeed(walletInfo.mnemonic)
@@ -85,8 +89,16 @@ class GetAddress extends Command {
     await appUtils.saveWallet(filename, walletInfo)
 
     // get the cash address
-    const newAddress = this.BITBOX.HDNode.toCashAddress(change)
+    let newAddress = this.BITBOX.HDNode.toCashAddress(change)
     //const legacy = BITBOX.HDNode.toLegacyAddress(change)
+
+    // Convert to a simpleledger: address if token flag is passed.
+    console.log(`flags: ${JSON.stringify(flags, null, 2)}`)
+    if (flags.token) {
+      console.log(`initial address: ${newAddress}`)
+
+      newAddress = this.BITBOX.Address.toSLPAddress(newAddress)
+    }
 
     return newAddress
   }
@@ -105,7 +117,11 @@ class GetAddress extends Command {
 GetAddress.description = `Generate a new address to recieve BCH.`
 
 GetAddress.flags = {
-  name: flags.string({ char: "n", description: "Name of wallet" })
+  name: flags.string({ char: "n", description: "Name of wallet" }),
+  token: flags.boolean({
+    char: "t",
+    description: "Generate a simpledger: token address"
+  })
 }
 
 module.exports = GetAddress
