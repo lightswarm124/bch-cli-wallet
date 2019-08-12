@@ -11,8 +11,12 @@
 const AppUtils = require("../util")
 const appUtils = new AppUtils()
 
-const BB = require("bitbox-sdk").BITBOX
-const BITBOX = new BB({ restURL: "https://rest.bitcoin.com/v2/" })
+//const BB = require("bitbox-sdk").BITBOX
+//const BITBOX = new BB({ restURL: "https://rest.bitcoin.com/v2/" })
+const BCHJS = require("@chris.troutner/bch-js")
+const BCHAPI_URL = `192.168.0.38`
+//const BCHAPI_URL = `decatur.hopto.org`
+const BITBOX = new BCHJS({ restURL: `http://${BCHAPI_URL}:12400/v3/` })
 
 // Used for debugging and error reporting.
 const util = require("util")
@@ -43,16 +47,20 @@ class UpdateBalances extends Command {
       console.log(`Existing balance: ${walletInfo.balance} BCH`)
 
       // Determine if this is a testnet wallet or a mainnet wallet.
-      if (walletInfo.network === "testnet")
-        this.BITBOX = new BB({ restURL: "https://trest.bitcoin.com/v2/" })
+      if (walletInfo.network === "testnet") {
+        //this.BITBOX = new BB({ restURL: "https://trest.bitcoin.com/v2/" })
+        this.BITBOX = new BCHJS({
+          restURL: `http://${BCHAPI_URL}:13400/v3/`
+        })
+      }
 
       // Update the balances in the wallet.
       walletInfo = await this.updateBalances(filename, walletInfo)
 
       console.log(`Updated balance: ${walletInfo.balance} BCH`)
     } catch (err) {
-      if (err.message) console.log(err.message)
-      else console.log(`Error in UpdateBalances.run: `, err)
+      //if (err.message) console.log(err.message)
+      console.log(`Error in UpdateBalances.run: `, err)
     }
   }
 
@@ -162,11 +170,11 @@ class UpdateBalances extends Command {
       )
 
       // Get the list of addresses.
-      const addresses = this.generateAddress(walletInfo, index, limit)
+      const addresses = await this.generateAddress(walletInfo, index, limit)
       //console.log(`addresses: ${util.inspect(addresses)}`)
 
       // get BCH balance and details for each address.
-      const balances = await this.BITBOX.Address.details(addresses)
+      const balances = await this.BITBOX.Insight.Address.details(addresses)
 
       return balances
     } catch (err) {
@@ -179,9 +187,9 @@ class UpdateBalances extends Command {
   // Address are generated from index to limit.
   // e.g. generateAddress(walletInfo, 20, 10)
   // will generate a 20-element array of addresses from index 20 to 29
-  generateAddress(walletInfo, index, limit) {
+  async generateAddress(walletInfo, index, limit) {
     // root seed buffer
-    const rootSeed = this.BITBOX.Mnemonic.toSeed(walletInfo.mnemonic)
+    const rootSeed = await this.BITBOX.Mnemonic.toSeed(walletInfo.mnemonic)
 
     // master HDNode
     if (walletInfo.network === "testnet")
