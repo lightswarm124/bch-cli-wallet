@@ -54,7 +54,7 @@ $ npm install -g bch-cli-wallet
 $ bch-cli-wallet COMMAND
 running command...
 $ bch-cli-wallet (-v|--version|version)
-bch-cli-wallet/1.3.1 linux-x64 node-v10.15.1
+bch-cli-wallet/1.3.1 linux-x64 node-v10.16.0
 $ bch-cli-wallet --help [COMMAND]
 USAGE
   $ bch-cli-wallet COMMAND
@@ -65,12 +65,14 @@ USAGE
 <!-- commands -->
 * [`bch-cli-wallet create-wallet`](#bch-cli-wallet-create-wallet)
 * [`bch-cli-wallet get-address`](#bch-cli-wallet-get-address)
+* [`bch-cli-wallet get-key`](#bch-cli-wallet-get-key)
 * [`bch-cli-wallet hello`](#bch-cli-wallet-hello)
 * [`bch-cli-wallet help [COMMAND]`](#bch-cli-wallet-help-command)
 * [`bch-cli-wallet list-wallets`](#bch-cli-wallet-list-wallets)
 * [`bch-cli-wallet remove-wallet`](#bch-cli-wallet-remove-wallet)
 * [`bch-cli-wallet send`](#bch-cli-wallet-send)
 * [`bch-cli-wallet send-all`](#bch-cli-wallet-send-all)
+* [`bch-cli-wallet sweep`](#bch-cli-wallet-sweep)
 * [`bch-cli-wallet update-balances`](#bch-cli-wallet-update-balances)
 
 ## `bch-cli-wallet create-wallet`
@@ -101,6 +103,20 @@ OPTIONS
 ```
 
 _See code: [src/commands/get-address.js](https://github.com/Bitcoin-com/bch-cli-wallet/blob/v1.3.1/src/commands/get-address.js)_
+
+## `bch-cli-wallet get-key`
+
+Generate a new private/public key pair.
+
+```
+USAGE
+  $ bch-cli-wallet get-key
+
+OPTIONS
+  -n, --name=name  Name of wallet
+```
+
+_See code: [src/commands/get-key.js](https://github.com/Bitcoin-com/bch-cli-wallet/blob/v1.3.1/src/commands/get-key.js)_
 
 ## `bch-cli-wallet hello`
 
@@ -135,7 +151,7 @@ OPTIONS
   --all  see all commands in CLI
 ```
 
-_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.1.6/src/commands/help.ts)_
+_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.2.0/src/commands/help.ts)_
 
 ## `bch-cli-wallet list-wallets`
 
@@ -199,6 +215,27 @@ DESCRIPTION
 ```
 
 _See code: [src/commands/send-all.js](https://github.com/Bitcoin-com/bch-cli-wallet/blob/v1.3.1/src/commands/send-all.js)_
+
+## `bch-cli-wallet sweep`
+
+Sweep a private key
+
+```
+USAGE
+  $ bch-cli-wallet sweep
+
+OPTIONS
+  -a, --address=address  Address to sweep funds to.
+  -b, --balanceOnly      Balance only, no claim.
+  -t, --testnet          Testnet
+  -w, --wif=wif          WIF private key
+
+DESCRIPTION
+  ...
+  Sweeps a private key in WIF format.
+```
+
+_See code: [src/commands/sweep.js](https://github.com/Bitcoin-com/bch-cli-wallet/blob/v1.3.1/src/commands/sweep.js)_
 
 ## `bch-cli-wallet update-balances`
 
