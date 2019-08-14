@@ -80,9 +80,27 @@ const mockAddressDetails2 = [
   }
 ]
 
+const mockUtxos = {
+  utxos: [
+    {
+      txid: "77aff2eee866ae8fb335d670e68422dddd018fbf501b0da986e52c960cb3b6d6",
+      vout: 0,
+      amount: 0.00005176,
+      satoshis: 5176,
+      height: 595653,
+      confirmations: 143
+    }
+  ],
+  legacyAddress: "14RnUWKF6dtRBnPApFAEftwTR4q4yrhtgM",
+  cashAddress: "bitcoincash:qqjes5sxwneywmnzqndvs6p3l9rp55a2ug0e6e6s0a",
+  slpAddress: "simpleledger:qqjes5sxwneywmnzqndvs6p3l9rp55a2ugrz3z0s3r",
+  scriptPubKey: "76a9142598520674f2476e6204dac86831f9461a53aae288ac"
+}
+
 const updateBalancesMocks = {
   mockAddressDetails1,
-  mockAddressDetails2
+  mockAddressDetails2,
+  mockUtxos
 }
 
 module.exports = updateBalancesMocks

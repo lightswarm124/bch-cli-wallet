@@ -128,9 +128,9 @@ describe("Sweep", () => {
         // Generate the corect kind of mock data.
         let mockDetails = mockData.mockAddressDetails1
         mockDetails = mockDetails[0]
-        mockData.balance = 0.000013
+        mockDetails.balance = 0.000013
 
-        sandbox.stub(sweep.BITBOX.Address, "details").resolves(mockData)
+        sandbox.stub(sweep.BITBOX.Address, "details").resolves(mockDetails)
       }
 
       const result = await sweep.getBalance(flags)
@@ -138,9 +138,17 @@ describe("Sweep", () => {
       assert.isAbove(result, 0)
     })
   })
-  /*
-  describe('#sweep', () => {
-    it('')
+
+  describe("#sweep", () => {
+    it("should sweep funds", async () => {
+      const flags = {
+        wif: "L287yGQj4DB4fbUKSV7DMHsyGQs1qh2E3EYJ21P88mXNKaFvmNWk",
+        address: "bitcoincash:qqjes5sxwneywmnzqndvs6p3l9rp55a2ug0e6e6s0a"
+      }
+
+      const result = await sweep.sweep(flags)
+
+      assert.isString(result, "Returned value should be a txid string.")
+    })
   })
-*/
 })

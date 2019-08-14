@@ -205,6 +205,10 @@ const bitboxMock = {
   },
   RawTransactions: {
     sendRawTransaction: sinon.stub().returns(`mockTXID`)
+  },
+  ECPair: {
+    fromWIF: sinon.stub().returns({}),
+    toCashAddress: sinon.stub().returns({})
   }
 }
 

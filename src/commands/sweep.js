@@ -1,3 +1,10 @@
+/*
+  Allows sweeping of a Compressed WIF private key.
+
+  TO-DO:
+  - Add support for testnet.
+*/
+
 "use strict"
 
 const { Command, flags } = require("@oclif/command")
@@ -53,7 +60,7 @@ class Sweep extends Command {
       // Get the UTXOs for that address.
       const u = await this.BITBOX.Address.utxo(fromAddr)
       const utxos = u.utxos
-      console.log(`utxos: ${JSON.stringify(u, null, 2)}`)
+      //console.log(`utxos: ${JSON.stringify(u, null, 2)}`)
 
       // instance of transaction builder
       //let transactionBuilder
