@@ -15,7 +15,7 @@ const UpdateBalances = require("../../src/commands/update-balances")
 // Mock data
 const testwallet = require("../mocks/testwallet.json")
 const { bitboxMock } = require("../mocks/bitbox")
-const updateBalancesMocks = require("../mocks/update-balances")
+const updateBalancesMocks = require("../mocks/mock-data")
 
 const BB = require("bitbox-sdk").BITBOX
 const REST_URL = { restURL: "https://trest.bitcoin.com/v2/" }

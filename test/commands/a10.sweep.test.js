@@ -13,7 +13,7 @@ const Sweep = require("../../src/commands/sweep")
 // Mocking data
 const { bitboxMock } = require("../mocks/bitbox")
 const testwallet = require("../mocks/testwallet.json")
-const updateBalancesMocks = require("../mocks/update-balances")
+const mockData = require("../mocks/mock-data")
 
 // BITBOX used in integration tests.
 const BB = require("bitbox-sdk").BITBOX
@@ -126,8 +126,8 @@ describe("Sweep", () => {
       // Use mocked data if this is a unit test.
       if (process.env.TEST === "unit") {
         // Generate the corect kind of mock data.
-        let mockData = updateBalancesMocks.mockAddressDetails1
-        mockData = mockData[0]
+        let mockDetails = mockData.mockAddressDetails1
+        mockDetails = mockDetails[0]
         mockData.balance = 0.000013
 
         sandbox.stub(sweep.BITBOX.Address, "details").resolves(mockData)
@@ -138,4 +138,9 @@ describe("Sweep", () => {
       assert.isAbove(result, 0)
     })
   })
+  /*
+  describe('#sweep', () => {
+    it('')
+  })
+*/
 })
