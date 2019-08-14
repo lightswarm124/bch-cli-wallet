@@ -1,8 +1,8 @@
 /*
   Forked from get-address.js. This command generates a private key and public
-  address. Both are displayed on the command line. It is possible to convert
-  the private key to a QR code so that the fund can be 'swept' with the
-  bitcoin.com wallet.
+  address. Both are displayed on the command line along with a QR code.
+  This is exactly the same thing as generating a 'paper wallet'.
+  The QR code for private key can be 'swept' with the bitcoin.com wallet.
 
   -The next available address is tracked by the 'nextAddress' property in the
   wallet .json file.
@@ -111,7 +111,7 @@ class GetKey extends Command {
         pub: newAddress
       }
     } catch (err) {
-      console.log(`Error in getPair().`, err)
+      console.log(`Error in getPair().`)
       throw err
     }
   }

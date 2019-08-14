@@ -191,7 +191,8 @@ const bitboxMock = {
     derivePath: sinon.stub().returns({}),
     toCashAddress: sinon.stub().returns({}),
     toLegacyAddress: sinon.stub().returns({}),
-    toKeyPair: sinon.stub().returns({})
+    toKeyPair: sinon.stub().returns({}),
+    toWIF: sinon.stub().returns({})
   },
   Address: {
     details: sinon.stub().returns(addressDetails),
