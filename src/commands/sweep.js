@@ -50,6 +50,9 @@ class Sweep extends Command {
   // Sweep the private key and send funds to the address specified.
   async sweep(flags) {
     try {
+      if (flags.testnet)
+        this.BITBOX = new BB({ restURL: "https://trest.bitcoin.com/v2/" })
+
       const wif = flags.wif
       const toAddr = flags.address
 
@@ -63,11 +66,10 @@ class Sweep extends Command {
       //console.log(`utxos: ${JSON.stringify(u, null, 2)}`)
 
       // instance of transaction builder
-      //let transactionBuilder
-      //if (walletInfo.network === `testnet`)
-      //  transactionBuilder = new this.BITBOX.TransactionBuilder("testnet")
-      //else transactionBuilder = new this.BITBOX.TransactionBuilder()
-      const transactionBuilder = new this.BITBOX.TransactionBuilder()
+      let transactionBuilder
+      if (flags.testnet)
+        transactionBuilder = new this.BITBOX.TransactionBuilder("testnet")
+      else transactionBuilder = new this.BITBOX.TransactionBuilder()
 
       let originalAmount = 0
 
@@ -131,6 +133,9 @@ class Sweep extends Command {
   // Retrieve the balance of the address associated with the private key.
   async getBalance(flags) {
     try {
+      if (flags.testnet)
+        this.BITBOX = new BB({ restURL: "https://trest.bitcoin.com/v2/" })
+
       const wif = flags.wif
 
       const ecPair = this.BITBOX.ECPair.fromWIF(wif)
