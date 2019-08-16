@@ -5,12 +5,12 @@
 "use strict"
 
 const assert = require("chai").assert
+
 const CreateWallet = require("../../src/commands/create-wallet")
 const GetAddress = require("../../src/commands/get-address")
-const { bitboxMock } = require("../mocks/bitbox")
+const config = require("../../config")
 
-const BB = require("bitbox-sdk").BITBOX
-const REST_URL = { restURL: "https://trest.bitcoin.com/v2/" }
+const { bitboxMock } = require("../mocks/bitbox")
 
 // Inspect utility used for debugging.
 const util = require("util")
@@ -67,7 +67,8 @@ describe("get-address", () => {
 
   it("increments the nextAddress property of the wallet.", async () => {
     // Use the real library if this is not a unit test
-    if (process.env.TEST !== "unit") getAddress.BITBOX = new BB(REST_URL)
+    if (process.env.TEST !== "unit")
+      getAddress.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
 
     const filename = `${__dirname}/../../wallets/test123.json`
 

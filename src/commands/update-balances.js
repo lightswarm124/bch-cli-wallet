@@ -2,8 +2,6 @@
   oclif command to update the balances stored in the wallet.json file.
 
   TODO:
-  -Add BIP44 support
-  -Batch requests 20-addresses at-a-time
 */
 
 "use strict"
@@ -11,8 +9,10 @@
 const AppUtils = require("../util")
 const appUtils = new AppUtils()
 
-const BB = require("bitbox-sdk").BITBOX
-const BITBOX = new BB({ restURL: "https://rest.bitcoin.com/v2/" })
+const config = require("../../config")
+
+// Mainnet by default
+const BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
 
 // Used for debugging and error reporting.
 const util = require("util")
@@ -44,15 +44,15 @@ class UpdateBalances extends Command {
 
       // Determine if this is a testnet wallet or a mainnet wallet.
       if (walletInfo.network === "testnet")
-        this.BITBOX = new BB({ restURL: "https://trest.bitcoin.com/v2/" })
+        this.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
 
       // Update the balances in the wallet.
       walletInfo = await this.updateBalances(filename, walletInfo)
 
       console.log(`Updated balance: ${walletInfo.balance} BCH`)
     } catch (err) {
-      if (err.message) console.log(err.message)
-      else console.log(`Error in UpdateBalances.run: `, err)
+      //if (err.message) console.log(err.message)
+      console.log(`Error in UpdateBalances.run: `, err)
     }
   }
 
@@ -149,12 +149,17 @@ class UpdateBalances extends Command {
     }
   }
 
-  // Retrieves details data (objects) on addresses in an HD wallet from rest.bitcoin.com
+  // Retrieves details data (objects) on addresses in an HD wallet from REST server.
   // A max of 20 addresses can be retrieved at a time.
   // Addresses start at the index and the number of address data retrieved is
   // set by the limit (up to 20). Data is returned as an array of objects.
   async getAddressData(walletInfo, index, limit) {
     try {
+      if (isNaN(index)) throw new Error(`index must be supplied as a number.`)
+
+      if (!limit || isNaN(limit))
+        throw new Error(`limit must be supplied as a non-zero number.`)
+
       if (limit > 20) throw new Error(`limit must be 20 or less.`)
 
       console.log(
@@ -162,11 +167,14 @@ class UpdateBalances extends Command {
       )
 
       // Get the list of addresses.
-      const addresses = this.generateAddress(walletInfo, index, limit)
+      const addresses = await this.generateAddress(walletInfo, index, limit)
       //console.log(`addresses: ${util.inspect(addresses)}`)
 
       // get BCH balance and details for each address.
-      const balances = await this.BITBOX.Address.details(addresses)
+      let balances
+      if (config.RESTAPI === "bitcoin.com")
+        balances = await this.BITBOX.Address.details(addresses)
+      else balances = await this.BITBOX.Insight.Address.details(addresses)
 
       return balances
     } catch (err) {
@@ -179,9 +187,12 @@ class UpdateBalances extends Command {
   // Address are generated from index to limit.
   // e.g. generateAddress(walletInfo, 20, 10)
   // will generate a 20-element array of addresses from index 20 to 29
-  generateAddress(walletInfo, index, limit) {
+  async generateAddress(walletInfo, index, limit) {
     // root seed buffer
-    const rootSeed = this.BITBOX.Mnemonic.toSeed(walletInfo.mnemonic)
+    let rootSeed
+    if (config.RESTAPI === "bitcoin.com")
+      rootSeed = this.BITBOX.Mnemonic.toSeed(walletInfo.mnemonic)
+    else rootSeed = await this.BITBOX.Mnemonic.toSeed(walletInfo.mnemonic)
 
     // master HDNode
     if (walletInfo.network === "testnet")
@@ -252,6 +263,7 @@ class UpdateBalances extends Command {
       totalUnconfirmed += thisHasBalance.unconfirmedBalance
     }
 
+    // The amount of satoshis in one coin.
     const ONE_COIN = 100000000
 
     // Convert to satoshis

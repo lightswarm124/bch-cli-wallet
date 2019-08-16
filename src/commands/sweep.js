@@ -1,5 +1,12 @@
 /*
-  Allows sweeping of a Compressed WIF private key.
+  Allows sweeping of a Compressed WIF private key. This function is required
+  to retrieve funds from a 'paper wallet'.
+
+  Workflow:
+  - Generate address (public key) from private key.
+  - Check balance of address.
+  - Exit if balance === 0.
+  - Combine all UTXOs into a transaction and send to user-provided address.
 
   TO-DO:
   - Add support for testnet.
@@ -9,8 +16,10 @@
 
 const { Command, flags } = require("@oclif/command")
 
-const BB = require("bitbox-sdk").BITBOX
-const BITBOX = new BB({ restURL: "https://rest.bitcoin.com/v2/" })
+const config = require("../../config")
+
+// Mainnet by default.
+const BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
 
 // Used for debugging and error reporting.
 const util = require("util")
@@ -51,7 +60,7 @@ class Sweep extends Command {
   async sweep(flags) {
     try {
       if (flags.testnet)
-        this.BITBOX = new BB({ restURL: "https://trest.bitcoin.com/v2/" })
+        this.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
 
       const wif = flags.wif
       const toAddr = flags.address
@@ -61,7 +70,11 @@ class Sweep extends Command {
       const fromAddr = this.BITBOX.ECPair.toCashAddress(ecPair)
 
       // Get the UTXOs for that address.
-      const u = await this.BITBOX.Address.utxo(fromAddr)
+      let u
+      if (config.RESTAPI === "bitcoin.com")
+        u = await this.BITBOX.Address.utxo(fromAddr)
+      else u = await this.BITBOX.Insight.Address.utxo(fromAddr)
+
       const utxos = u.utxos
       //console.log(`utxos: ${JSON.stringify(u, null, 2)}`)
 
@@ -134,7 +147,7 @@ class Sweep extends Command {
   async getBalance(flags) {
     try {
       if (flags.testnet)
-        this.BITBOX = new BB({ restURL: "https://trest.bitcoin.com/v2/" })
+        this.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
 
       const wif = flags.wif
 
@@ -143,7 +156,10 @@ class Sweep extends Command {
       const fromAddr = this.BITBOX.ECPair.toCashAddress(ecPair)
 
       // get BCH balance for the public address from rest.bitcoin.com.
-      const balances = await this.BITBOX.Address.details(fromAddr)
+      let balances
+      if (config.RESTAPI === "bitcoin.com")
+        balances = await this.BITBOX.Address.details(fromAddr)
+      else balances = await this.BITBOX.Insight.Address.details(fromAddr)
 
       return balances.balance
     } catch (err) {

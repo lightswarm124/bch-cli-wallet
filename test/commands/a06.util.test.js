@@ -9,9 +9,7 @@ const sinon = require("sinon")
 
 // File under test.
 const AppUtils = require("../../src/util")
-
-const BB = require("bitbox-sdk").BITBOX
-const REST_URL = { restURL: "https://trest.bitcoin.com/v2/" }
+const config = require("../../config")
 
 // Mocking data
 const { bitboxMock } = require("../mocks/bitbox")
@@ -54,7 +52,9 @@ describe("#util.js", () => {
     it("should get all UTXOs in wallet", async () => {
       // Use the real library if this is not a unit test.
       //if (process.env.TEST !== "unit") appUtils.BITBOX = new BB(REST_URL)
-      appUtils.BITBOX = new BB(REST_URL)
+      appUtils.BITBOX = new config.BCHLIB({
+        restURL: config.TESTNET_REST
+      })
 
       if (process.env.TEST === "unit") {
         sandbox
@@ -99,10 +99,12 @@ describe("#util.js", () => {
   })
 
   describe("#changeAddrFromMnemonic", () => {
-    it("should return a change address", () => {
-      appUtils.BITBOX = new BB(REST_URL)
+    it("should return a change address", async () => {
+      appUtils.BITBOX = new config.BCHLIB({
+        restURL: config.TESTNET_REST
+      })
 
-      const result = appUtils.changeAddrFromMnemonic(mockedWallet, 0)
+      const result = await appUtils.changeAddrFromMnemonic(mockedWallet, 0)
       //console.log(`result: ${util.inspect(result)}`)
       //console.log(`result: ${JSON.stringify(result, null, 2)}`)
 

@@ -18,8 +18,9 @@ util.inspect.defaultOptions = {
   depth: 1
 }
 
-const BB = require("bitbox-sdk").BITBOX
-const BITBOX = new BB({ restURL: "https://rest.bitcoin.com/v2/" })
+const config = require("../config")
+
+const BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
 
 class AppUtils {
   constructor() {
@@ -37,8 +38,12 @@ class AppUtils {
         const thisAddr = walletInfo.hasBalance[i].cashAddress
 
         // Get the UTXOs for that address.
-        const u = await this.BITBOX.Address.utxo(thisAddr)
+        let u
+        if (config.RESTAPI === "bitcoin.com")
+          u = await this.BITBOX.Address.utxo(thisAddr)
+        else u = await this.BITBOX.Insight.Address.utxo(thisAddr)
         //console.log(`u for ${thisAddr}: ${JSON.stringify(u, null, 2)}`)
+
         const utxos = u.utxos
         //console.log(`utxos for ${thisAddr}: ${util.inspect(utxos)}`)
 
@@ -90,10 +95,13 @@ class AppUtils {
   }
 
   // Generate a change address from a Mnemonic of a private key.
-  changeAddrFromMnemonic(walletInfo, index) {
+  async changeAddrFromMnemonic(walletInfo, index) {
     try {
       // root seed buffer
-      const rootSeed = this.BITBOX.Mnemonic.toSeed(walletInfo.mnemonic)
+      let rootSeed
+      if (config.RESTAPI === "bitcoin.com")
+        rootSeed = this.BITBOX.Mnemonic.toSeed(walletInfo.mnemonic)
+      else rootSeed = await this.BITBOX.Mnemonic.toSeed(walletInfo.mnemonic)
 
       // master HDNode
       if (walletInfo.network === "testnet")
@@ -132,7 +140,3 @@ class AppUtils {
 }
 
 module.exports = AppUtils
-/*
-changeAddrFromMnemonic, // Used for signing transactions.
-
-*/
