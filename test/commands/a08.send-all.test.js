@@ -11,14 +11,11 @@ const assert = require("chai").assert
 
 // Library under test.
 const SendAll = require("../../src/commands/send-all")
+const config = require("../../config")
 
 // Mocking data
 const { bitboxMock } = require("../mocks/bitbox")
 const testwallet = require("../mocks/testwallet.json")
-
-// BITBOX used in integration tests.
-const BB = require("bitbox-sdk")
-const REST_URL = { restURL: "https://trest.bitcoin.com/v2/" }
 
 // Inspect utility used for debugging.
 const util = require("util")

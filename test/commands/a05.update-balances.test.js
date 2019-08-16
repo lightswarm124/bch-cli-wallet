@@ -1,7 +1,6 @@
 /*
   TODO:
 
-
 */
 
 "use strict"
@@ -11,14 +10,15 @@ const sinon = require("sinon")
 
 // File to be tested.
 const UpdateBalances = require("../../src/commands/update-balances")
+const config = require("../../config")
 
 // Mock data
 const testwallet = require("../mocks/testwallet.json")
 const { bitboxMock } = require("../mocks/bitbox")
 const updateBalancesMocks = require("../mocks/mock-data")
 
-const BB = require("bitbox-sdk").BITBOX
-const REST_URL = { restURL: "https://trest.bitcoin.com/v2/" }
+//const BB = require("bitbox-sdk").BITBOX
+//const REST_URL = { restURL: "https://trest.bitcoin.com/v2/" }
 
 // Inspect utility used for debugging.
 const util = require("util")
@@ -33,7 +33,7 @@ if (!process.env.TEST) process.env.TEST = "unit"
 
 describe("#update-balances.js", () => {
   let mockedWallet
-  //const filename = `${__dirname}/../../wallets/test123.json`
+  const filename = `${__dirname}/../../wallets/test123.json`
   let updateBalances
   let sandbox
   let mockDataCopy
@@ -56,9 +56,11 @@ describe("#update-balances.js", () => {
 
   describe("#generateAddresses", () => {
     it("should generate an address accurately.", async () => {
-      updateBalances.BITBOX = new BB(REST_URL)
+      updateBalances.BITBOX = new config.BCHLIB({
+        restURL: config.TESTNET_REST
+      })
 
-      const addr = updateBalances.generateAddress(mockedWallet, 3, 1)
+      const addr = await updateBalances.generateAddress(mockedWallet, 3, 1)
       //console.log(`addr: ${util.inspect(addr)}`)
 
       assert.isArray(addr)
@@ -70,9 +72,11 @@ describe("#update-balances.js", () => {
     })
 
     it("should generate the first 20 addresses", async () => {
-      updateBalances.BITBOX = new BB(REST_URL)
+      updateBalances.BITBOX = new config.BCHLIB({
+        restURL: config.TESTNET_REST
+      })
 
-      const addr = updateBalances.generateAddress(mockedWallet, 0, 20)
+      const addr = await updateBalances.generateAddress(mockedWallet, 0, 20)
       //console.log(`addr: ${util.inspect(addr)}`)
 
       assert.isArray(addr)
@@ -82,6 +86,31 @@ describe("#update-balances.js", () => {
   })
 
   describe("#getAddressData", () => {
+    it("should throw error if index is not supplied", async () => {
+      try {
+        await updateBalances.getAddressData(mockedWallet)
+
+        assert.equal(true, false, "unexpected result!")
+      } catch (err) {
+        //console.log(`err: ${util.inspect(err)}`)
+        assert.include(err.message, "index must be supplied as a number")
+      }
+    })
+
+    it("should throw error if limit is not supplied", async () => {
+      try {
+        await updateBalances.getAddressData(mockedWallet, 0)
+
+        assert.equal(true, false, "unexpected result!")
+      } catch (err) {
+        //console.log(`err: ${util.inspect(err)}`)
+        assert.include(
+          err.message,
+          "limit must be supplied as a non-zero number"
+        )
+      }
+    })
+
     it("should throw error if limit is over 20", async () => {
       try {
         await updateBalances.getAddressData(mockedWallet, 0, 40)
@@ -94,7 +123,9 @@ describe("#update-balances.js", () => {
     })
 
     it("should return an array of address data", async () => {
-      updateBalances.BITBOX = new BB(REST_URL)
+      updateBalances.BITBOX = new config.BCHLIB({
+        restURL: config.TESTNET_REST
+      })
 
       // Use mocked data if this is a unit test.
       if (process.env.TEST === "unit") {
@@ -142,7 +173,9 @@ describe("#update-balances.js", () => {
           .onThirdCall()
           .resolves(updateBalancesMocks.mockAddressDetails2)
       } else {
-        updateBalances.BITBOX = new BB(REST_URL)
+        updateBalances.BITBOX = new config.BCHLIB({
+          restURL: config.TESTNET_REST
+        })
       }
 
       const result = await updateBalances.getAllAddressData(mockedWallet)
@@ -165,14 +198,20 @@ describe("#update-balances.js", () => {
         )
       }
     })
-    /*
-
 
     it("should get balances for all addresses in wallet", async () => {
       // Use the real library if this is not a unit test.
-      if (process.env.TEST !== "unit") updateBalances.BITBOX = new BB(REST_URL)
+      if (process.env.TEST !== "unit") {
+        updateBalances.BITBOX = new config.BCHLIB({
+          restURL: config.TESTNET_REST
+        })
+      }
 
-      const balances = await updateBalances.getAddressData(mockedWallet)
+      const balances = await updateBalances.getAddressData(
+        mockedWallet,
+        0,
+        mockedWallet.nextAddress
+      )
       //console.log(`balances: ${util.inspect(balances)}`)
 
       assert.isArray(balances, "Expect array of address balances")
@@ -209,33 +248,39 @@ describe("#update-balances.js", () => {
       assert.equal(balanceTotal, 0.09999752)
     })
 
-    it("should update balances", async () => {
-      // Use the real library if this is not a unit test.
-      if (process.env.TEST !== "unit") updateBalances.BITBOX = new BB(REST_URL)
+    // Only run this test as an integration test.
+    // DANGER! Due to the mocking used in unit tests, this test will never end.
+    if (process.env.TEST !== "unit") {
+      it("should update balances", async () => {
+        // Use the real library.
 
-      const walletInfo = await updateBalances.updateBalances(
-        filename,
-        mockedWallet
-      )
-      //console.log(`walletInfo: ${JSON.stringify(walletInfo, null, 2)}`)
+        updateBalances.BITBOX = new config.BCHLIB({
+          restURL: config.TESTNET_REST
+        })
 
-      assert.hasAllKeys(walletInfo, [
-        "network",
-        "mnemonic",
-        "balance",
-        "balanceConfirmed",
-        "balanceUnconfirmed",
-        "nextAddress",
-        "hasBalance",
-        "rootAddress",
-        "name"
-      ])
+        const walletInfo = await updateBalances.updateBalances(
+          filename,
+          mockedWallet
+        )
+        //console.log(`walletInfo: ${JSON.stringify(walletInfo, null, 2)}`)
 
-      assert.isArray(
-        walletInfo.hasBalance,
-        "Expect array of addresses with balances."
-      )
-    })
-*/
+        assert.hasAllKeys(walletInfo, [
+          "network",
+          "mnemonic",
+          "balance",
+          "balanceConfirmed",
+          "balanceUnconfirmed",
+          "nextAddress",
+          "hasBalance",
+          "rootAddress",
+          "name"
+        ])
+
+        assert.isArray(
+          walletInfo.hasBalance,
+          "Expect array of addresses with balances."
+        )
+      })
+    }
   })
 })

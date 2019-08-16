@@ -9,15 +9,12 @@ const sinon = require("sinon")
 
 // Library under test.
 const Sweep = require("../../src/commands/sweep")
+const config = require("../../config")
 
 // Mocking data
 const { bitboxMock } = require("../mocks/bitbox")
 const testwallet = require("../mocks/testwallet.json")
 const mockData = require("../mocks/mock-data")
-
-// BITBOX used in integration tests.
-const BB = require("bitbox-sdk").BITBOX
-const REST_URL = { restURL: "https://trest.bitcoin.com/v2/" }
 
 // Inspect utility used for debugging.
 const util = require("util")
@@ -117,7 +114,7 @@ describe("Sweep", () => {
 
   describe("#getBalance()", () => {
     it("should return balance", async () => {
-      sweep.BITBOX = new BB(REST_URL)
+      sweep.BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
 
       const flags = {
         wif: "L287yGQj4DB4fbUKSV7DMHsyGQs1qh2E3EYJ21P88mXNKaFvmNWk"
@@ -141,14 +138,19 @@ describe("Sweep", () => {
 
   describe("#sweep", () => {
     it("should sweep funds", async () => {
+      // Use the real library if this is not a unit test
+      if (process.env.TEST !== "unit")
+        sweep.BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
+
       const flags = {
         wif: "L287yGQj4DB4fbUKSV7DMHsyGQs1qh2E3EYJ21P88mXNKaFvmNWk",
         address: "bitcoincash:qqjes5sxwneywmnzqndvs6p3l9rp55a2ug0e6e6s0a"
       }
 
       const result = await sweep.sweep(flags)
+      //console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
-      assert.isString(result, "Returned value should be a txid string.")
+      assert.isString(result[0], "Returned value should be a txid string.")
     })
   })
 })
