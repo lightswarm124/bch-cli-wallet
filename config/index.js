@@ -8,7 +8,7 @@
 "use strict"
 
 // By default choose a local rest API.
-let RESTAPI = "local"
+let RESTAPI = "bitcoin.com"
 
 // Override the RESTAPI setting if envronment variable is set.
 if (process.env.RESTAPI) RESTAPI = process.env.RESTAPI
