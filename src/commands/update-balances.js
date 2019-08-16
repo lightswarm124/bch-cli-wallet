@@ -2,8 +2,6 @@
   oclif command to update the balances stored in the wallet.json file.
 
   TODO:
-  -Add BIP44 support
-  -Batch requests 20-addresses at-a-time
 */
 
 "use strict"
@@ -11,12 +9,15 @@
 const AppUtils = require("../util")
 const appUtils = new AppUtils()
 
-//const BB = require("bitbox-sdk").BITBOX
-//const BITBOX = new BB({ restURL: "https://rest.bitcoin.com/v2/" })
 const BCHJS = require("@chris.troutner/bch-js")
-const BCHAPI_URL = `192.168.0.38`
-//const BCHAPI_URL = `decatur.hopto.org`
-const BITBOX = new BCHJS({ restURL: `http://${BCHAPI_URL}:12400/v3/` })
+
+const BCHAPI_MAIN = `http://192.168.0.36:12400/v3/`
+//const BCHAPI_MAIN = `http://decatur.hopto.org:12400/v3/`
+const BCHAPI_TEST = `http://192.168.0.38:13400/v3/`
+//const BCHAPI_TEST = `http://decatur.hopto.org:13400/v3/`
+
+// Mainnet by default
+const BITBOX = new BCHJS({ restURL: BCHAPI_MAIN })
 
 // Used for debugging and error reporting.
 const util = require("util")
@@ -49,9 +50,7 @@ class UpdateBalances extends Command {
       // Determine if this is a testnet wallet or a mainnet wallet.
       if (walletInfo.network === "testnet") {
         //this.BITBOX = new BB({ restURL: "https://trest.bitcoin.com/v2/" })
-        this.BITBOX = new BCHJS({
-          restURL: `http://${BCHAPI_URL}:13400/v3/`
-        })
+        this.BITBOX = new BCHJS({ restURL: BCHAPI_TEST })
       }
 
       // Update the balances in the wallet.

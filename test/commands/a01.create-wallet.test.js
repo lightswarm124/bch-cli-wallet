@@ -4,21 +4,11 @@
 
 "use strict"
 
-//const { expect, test } = require("@oclif/test")
 const assert = require("chai").assert
+
 const CreateWallet = require("../../src/commands/create-wallet")
+
 const { bitboxMock } = require("../mocks/bitbox")
-
-const BB = require("bitbox-sdk").BITBOX
-const REST_URL = { restURL: "https://trest.bitcoin.com/v2/" }
-
-// Inspect utility used for debugging.
-const util = require("util")
-util.inspect.defaultOptions = {
-  showHidden: true,
-  colors: true,
-  depth: 1
-}
 
 // Set default environment variables for unit tests.
 if (!process.env.TEST) process.env.TEST = "unit"
@@ -37,8 +27,6 @@ describe("create-wallet", () => {
     try {
       await createWallet.createWallet(undefined, undefined)
     } catch (err) {
-      //console.error(`Error expected: ${util.inspect(err)}`)
-
       assert.equal(
         err.message,
         "filename required.",
