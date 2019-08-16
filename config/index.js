@@ -2,7 +2,9 @@
   This config file contains settings shared across files.
 
   Toolset and REST API can be selected with this file, or by setting the RESTAPI
-  environment variable.
+  environment variable. By default, Bitcoin.com's infrastructure is used.
+
+  You can run your own infrastructure. See bchjs.cash for details.
 */
 
 "use strict"
