@@ -4,21 +4,12 @@
 
 "use strict"
 
-//const { expect, test } = require("@oclif/test")
 const assert = require("chai").assert
+
 const CreateWallet = require("../../src/commands/create-wallet")
+const config = require("../../config")
+
 const { bitboxMock } = require("../mocks/bitbox")
-
-const BB = require("slp-sdk")
-const REST_URL = { restURL: "https://trest.bitcoin.com/v2/" }
-
-// Inspect utility used for debugging.
-const util = require("util")
-util.inspect.defaultOptions = {
-  showHidden: true,
-  colors: true,
-  depth: 1
-}
 
 // Set default environment variables for unit tests.
 if (!process.env.TEST) process.env.TEST = "unit"
@@ -37,8 +28,6 @@ describe("create-wallet", () => {
     try {
       await createWallet.createWallet(undefined, undefined)
     } catch (err) {
-      //console.error(`Error expected: ${util.inspect(err)}`)
-
       assert.equal(
         err.message,
         "filename required.",
@@ -49,7 +38,8 @@ describe("create-wallet", () => {
 
   it("should create a mainnet wallet file with the given name", async () => {
     // Use the real library if this is not a unit test.
-    if (process.env.TEST !== "unit") createWallet.BITBOX = new BB(REST_URL)
+    if (process.env.TEST !== "unit")
+      createWallet.BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
 
     const filename = `${__dirname}/../../wallets/test123.json`
 
@@ -76,7 +66,8 @@ describe("create-wallet", () => {
 
   it("should create a mainnet wallet file when testnet is false", async () => {
     // Use the real library if this is not a unit test.
-    if (process.env.TEST !== "unit") createWallet.BITBOX = new BB(REST_URL)
+    if (process.env.TEST !== "unit")
+      createWallet.BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
 
     const filename = `${__dirname}/../../wallets/test123.json`
 
@@ -103,7 +94,8 @@ describe("create-wallet", () => {
 
   it("should create a testnet wallet file with the given name", async () => {
     // Use the real library if this is not a unit test.
-    if (process.env.TEST !== "unit") createWallet.BITBOX = new BB(REST_URL)
+    if (process.env.TEST !== "unit")
+      createWallet.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
 
     const filename = `${__dirname}/../../wallets/test123.json`
 

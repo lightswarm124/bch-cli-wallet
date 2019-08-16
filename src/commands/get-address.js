@@ -14,15 +14,10 @@ const qrcode = require("qrcode-terminal")
 const AppUtils = require("../util")
 const appUtils = new AppUtils()
 
-const MAIN_REST = `https://rest.bitcoin.com/v2/`
-const TEST_REST = `https://trest.bitcoin.com/v2/`
+const config = require("../../config")
 
-const BB = require("slp-sdk")
-const BITBOX = new BB({ restURL: MAIN_REST })
-
-// Used for debugging and iterrogating JS objects.
-const util = require("util")
-util.inspect.defaultOptions = { depth: 2 }
+// Mainnet by default.
+const BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
 
 const { Command, flags } = require("@oclif/command")
 
@@ -43,7 +38,8 @@ class GetAddress extends Command {
       this.validateFlags(flags)
 
       // Determine if this is a testnet wallet or a mainnet wallet.
-      if (flags.testnet) this.BITBOX = new BB({ restURL: TEST_REST })
+      if (flags.testnet)
+        this.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
 
       // Generate an absolute filename from the name.
       const filename = `${__dirname}/../../wallets/${flags.name}.json`
@@ -70,11 +66,14 @@ class GetAddress extends Command {
 
     // Point to the correct rest server.
     if (walletInfo.network === "testnet")
-      this.BITBOX = new BB({ restURL: TEST_REST })
-    else this.BITBOX = new BB({ restURL: MAIN_REST })
+      this.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
+    else this.BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
 
     // root seed buffer
-    const rootSeed = this.BITBOX.Mnemonic.toSeed(walletInfo.mnemonic)
+    let rootSeed
+    if (config.RESTAPI === "bitcoin.com")
+      rootSeed = this.BITBOX.Mnemonic.toSeed(walletInfo.mnemonic)
+    else rootSeed = await this.BITBOX.Mnemonic.toSeed(walletInfo.mnemonic)
 
     // master HDNode
     let masterHDNode
@@ -101,12 +100,22 @@ class GetAddress extends Command {
 
     // get the cash address
     let newAddress = this.BITBOX.HDNode.toCashAddress(change)
-    //let newAddress = BITBOX.HDNode.toLegacyAddress(change)
-    //console.log(`newAddress: ${JSON.stringify(newAddress, null, 2)}`)
+    /*
+    if (config.RESTAPI === "bitcoin.com")
+      newAddress = this.BITBOX.HDNode.toCashAddress(change)
+    else newAddress = this.BITBOX.SLP.HDNode.toCashAddress(change)
+    */
 
     // Convert to a simpleledger: address if token flag is passed.
+    /*
     if (flags && flags.token)
       newAddress = this.BITBOX.Address.toSLPAddress(newAddress)
+    */
+    if (flags && flags.token) {
+      if (config.RESTAPI === "bitcoin.com")
+        newAddress = this.BITBOX.Address.toSLPAddress(newAddress)
+      else newAddress = this.BITBOX.SLP.Address.toSLPAddress(newAddress)
+    }
 
     return newAddress
   }
