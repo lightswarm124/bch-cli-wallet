@@ -18,8 +18,12 @@ util.inspect.defaultOptions = {
   depth: 1
 }
 
-const BB = require("bitbox-sdk").BITBOX
-const BITBOX = new BB({ restURL: "https://rest.bitcoin.com/v2/" })
+const config = require("../config")
+
+const BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
+
+//const BB = require("bitbox-sdk").BITBOX
+//const BITBOX = new BB({ restURL: "https://rest.bitcoin.com/v2/" })
 
 class AppUtils {
   constructor() {

@@ -14,8 +14,9 @@ const qrcode = require("qrcode-terminal")
 const AppUtils = require("../util")
 const appUtils = new AppUtils()
 
-const BB = require("bitbox-sdk").BITBOX
-const BITBOX = new BB({ restURL: "https://rest.bitcoin.com/v2/" })
+const config = require("../../config")
+
+const BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
 
 const { Command, flags } = require("@oclif/command")
 
@@ -37,7 +38,7 @@ class GetAddress extends Command {
 
       // Determine if this is a testnet wallet or a mainnet wallet.
       if (flags.testnet)
-        this.BITBOX = new BB({ restURL: "https://trest.bitcoin.com/v2/" })
+        this.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
 
       // Generate an absolute filename from the name.
       const filename = `${__dirname}/../../wallets/${flags.name}.json`
@@ -62,7 +63,10 @@ class GetAddress extends Command {
     //console.log(`walletInfo: ${JSON.stringify(walletInfo, null, 2)}`)
 
     // root seed buffer
-    const rootSeed = this.BITBOX.Mnemonic.toSeed(walletInfo.mnemonic)
+    let rootSeed
+    if (config.RESTAPI === "bitcoin.com")
+      rootSeed = this.BITBOX.Mnemonic.toSeed(walletInfo.mnemonic)
+    else rootSeed = await this.BITBOX.Mnemonic.toSeed(walletInfo.mnemonic)
 
     // master HDNode
     if (walletInfo.network === "testnet")
