@@ -142,6 +142,17 @@ class AppUtils {
       throw err
     }
   }
+
+  // Takes a number and returns it, rounded to the nearest 8 decimal place.
+  eightDecimals(num) {
+    const thisNum = Number(num)
+
+    let tempNum = thisNum * 100000000
+    tempNum = Math.floor(tempNum)
+    tempNum = tempNum / 100000000
+
+    return tempNum
+  }
 }
 
 module.exports = AppUtils

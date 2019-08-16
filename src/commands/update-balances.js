@@ -82,7 +82,9 @@ class UpdateBalances extends Command {
     const balance = this.sumConfirmedBalances(hasBalance, true)
 
     // Save the data to the wallet JSON file.
-    walletInfo.balance = balance.totalConfirmed + balance.totalUnconfirmed
+    walletInfo.balance = appUtils.eightDecimals(
+      balance.totalConfirmed + balance.totalUnconfirmed
+    )
     walletInfo.balanceConfirmed = balance.totalConfirmed
     walletInfo.balanceUnconfirmed = balance.totalUnconfirmed
     walletInfo.hasBalance = hasBalance
@@ -119,6 +121,9 @@ class UpdateBalances extends Command {
         if (batchHasBalance) addressData = addressData.concat(thisDataBatch)
 
         //console.log(`addressData: ${util.inspect(addressData)}`)
+
+        // Protect against run-away while loop.
+        if (currentIndex > 10000) break
       }
 
       return addressData
@@ -175,6 +180,15 @@ class UpdateBalances extends Command {
       if (config.RESTAPI === "bitcoin.com")
         balances = await this.BITBOX.Address.details(addresses)
       else balances = await this.BITBOX.Insight.Address.details(addresses)
+
+      // get SLP token balance for each address
+      // Dev Note: Waiting for slp-sdk to implement bulk SLP balances.
+      if (config.RESTAPI !== "bitcoin.com") {
+        const slpBalances = await this.BITBOX.SLP.Utils.balancesForAddress(
+          addresses
+        )
+        console.log(`slpBalances: ${JSON.stringify(slpBalances, null, 2)}`)
+      }
 
       return balances
     } catch (err) {
