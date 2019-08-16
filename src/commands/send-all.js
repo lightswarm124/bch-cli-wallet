@@ -90,9 +90,11 @@ class SendAll extends Command {
   // Sends all BCH in a wallet to a new address.
   async sendAllBCH(utxos, sendToAddr, walletInfo) {
     try {
-      //console.log(`utxos: ${util.inspect(utxos)}`)
+      console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
 
-      if (!Array.isArray(utxos)) throw new Error(`utxos must be an array`)
+      if (!Array.isArray(utxos)) throw new Error(`utxos must be an array.`)
+
+      if (utxos.length === 0) throw new Error(`No utxos found.`)
 
       // instance of transaction builder
       let transactionBuilder
@@ -187,8 +189,9 @@ class SendAll extends Command {
   }
 }
 
-SendAll.description = `
-Send all BCH in a wallet to another address. **Degrades Privacy**
+SendAll.description = `Send all BCH in a wallet to another address. **Degrades Privacy**
+Send all BCH in a wallet to another address.
+
 This method has a negative impact on privacy by linking all addresses in a
 wallet. If privacy of a concern, CoinJoin should be used.
 This is a good article describing the privacy concerns:

@@ -100,17 +100,8 @@ class GetAddress extends Command {
 
     // get the cash address
     let newAddress = this.BITBOX.HDNode.toCashAddress(change)
-    /*
-    if (config.RESTAPI === "bitcoin.com")
-      newAddress = this.BITBOX.HDNode.toCashAddress(change)
-    else newAddress = this.BITBOX.SLP.HDNode.toCashAddress(change)
-    */
 
-    // Convert to a simpleledger: address if token flag is passed.
-    /*
-    if (flags && flags.token)
-      newAddress = this.BITBOX.Address.toSLPAddress(newAddress)
-    */
+    // Convert to simpleledger: address if flag is set.
     if (flags && flags.token) {
       if (config.RESTAPI === "bitcoin.com")
         newAddress = this.BITBOX.Address.toSLPAddress(newAddress)

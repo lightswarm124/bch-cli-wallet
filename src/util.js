@@ -42,7 +42,7 @@ class AppUtils {
         if (config.RESTAPI === "bitcoin.com")
           u = await this.BITBOX.Address.utxo(thisAddr)
         else u = await this.BITBOX.Insight.Address.utxo(thisAddr)
-        //console.log(`u for ${thisAddr}: ${JSON.stringify(u, null, 2)}`)
+        console.log(`u for ${thisAddr}: ${JSON.stringify(u, null, 2)}`)
 
         const utxos = u.utxos
         //console.log(`utxos for ${thisAddr}: ${util.inspect(utxos)}`)
@@ -56,7 +56,10 @@ class AppUtils {
           thisUTXO.hdIndex = walletInfo.hasBalance[i].index
 
           // Add the UTXO to the array if it has at least one confirmation.
-          if (thisUTXO.confirmations > 0) retArray.push(thisUTXO)
+          // Dev Note: Enable the line below if you want a more conservative
+          // approach of wanting a confirmation for each UTXO before spending
+          // it.
+          //if (thisUTXO.confirmations > 0) retArray.push(thisUTXO)
         }
       }
 

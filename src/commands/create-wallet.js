@@ -41,7 +41,10 @@ class CreateWallet extends Command {
 
       this.createWallet(filename, flags.testnet)
     } catch (err) {
-      console.log(`Error: `, err)
+      if (err.message) console.log(err.message)
+      else console.log(`Error in create-wallet.js/run(): `, err)
+
+      //console.log(`Error: `, err)
     }
   }
 
