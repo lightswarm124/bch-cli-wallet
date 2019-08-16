@@ -16,6 +16,7 @@ const appUtils = new AppUtils()
 
 const config = require("../../config")
 
+// Mainnet by default.
 const BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
 
 const { Command, flags } = require("@oclif/command")
