@@ -11,17 +11,8 @@ const appUtils = new AppUtils()
 
 const config = require("../../config")
 
-const BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
-
-//const BCHJS = require("@chris.troutner/bch-js")
-
-//const BCHAPI_MAIN = `http://192.168.0.36:12400/v3/`
-//const BCHAPI_MAIN = `http://decatur.hopto.org:12400/v3/`
-//const BCHAPI_TEST = `http://192.168.0.38:13400/v3/`
-//const BCHAPI_TEST = `http://decatur.hopto.org:13400/v3/`
-
 // Mainnet by default
-//const BITBOX = new BCHJS({ restURL: BCHAPI_MAIN })
+const BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
 
 // Used for debugging and error reporting.
 const util = require("util")
