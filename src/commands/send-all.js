@@ -80,6 +80,12 @@ class SendAll extends Command {
       const txid = await appUtils.broadcastTx(hex)
 
       console.log(`TXID: ${txid}`)
+
+      // Display link to block explorer.
+      console.log(`View on block explorer:`)
+      if (walletInfo.network === "testnet")
+        console.log(`https://explorer.bitcoin.com/tbch/tx/${txid}`)
+      else console.log(`https://explorer.bitcoin.com/bch/tx/${txid}`)
     } catch (err) {
       //if (err.message) console.log(err.message)
       //else console.log(`Error in .run: `, err)
@@ -90,7 +96,7 @@ class SendAll extends Command {
   // Sends all BCH in a wallet to a new address.
   async sendAllBCH(utxos, sendToAddr, walletInfo) {
     try {
-      console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
+      //console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
 
       if (!Array.isArray(utxos)) throw new Error(`utxos must be an array.`)
 

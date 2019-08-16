@@ -42,7 +42,7 @@ class AppUtils {
         if (config.RESTAPI === "bitcoin.com")
           u = await this.BITBOX.Address.utxo(thisAddr)
         else u = await this.BITBOX.Insight.Address.utxo(thisAddr)
-        console.log(`u for ${thisAddr}: ${JSON.stringify(u, null, 2)}`)
+        //console.log(`u for ${thisAddr}: ${JSON.stringify(u, null, 2)}`)
 
         const utxos = u.utxos
         //console.log(`utxos for ${thisAddr}: ${util.inspect(utxos)}`)
@@ -60,6 +60,8 @@ class AppUtils {
           // approach of wanting a confirmation for each UTXO before spending
           // it.
           //if (thisUTXO.confirmations > 0) retArray.push(thisUTXO)
+          // zero-conf OK.
+          retArray.push(thisUTXO)
         }
       }
 
