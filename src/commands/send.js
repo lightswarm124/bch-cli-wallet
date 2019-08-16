@@ -164,7 +164,10 @@ class Send extends Command {
       )
 
       // Generate a keypair from the change address.
-      const change = appUtils.changeAddrFromMnemonic(walletInfo, utxo.hdIndex)
+      const change = await appUtils.changeAddrFromMnemonic(
+        walletInfo,
+        utxo.hdIndex
+      )
       //console.log(`change: ${JSON.stringify(change, null, 2)}`)
       const keyPair = this.BITBOX.HDNode.toKeyPair(change)
 

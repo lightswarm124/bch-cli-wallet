@@ -141,7 +141,10 @@ class SendAll extends Command {
         const utxo = utxos[i]
 
         // Generate a keypair for the current address.
-        const change = appUtils.changeAddrFromMnemonic(walletInfo, utxo.hdIndex)
+        const change = await appUtils.changeAddrFromMnemonic(
+          walletInfo,
+          utxo.hdIndex
+        )
         const keyPair = this.BITBOX.HDNode.toKeyPair(change)
 
         transactionBuilder.sign(
