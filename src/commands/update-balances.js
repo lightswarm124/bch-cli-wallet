@@ -181,18 +181,73 @@ class UpdateBalances extends Command {
         balances = await this.BITBOX.Address.details(addresses)
       else balances = await this.BITBOX.Insight.Address.details(addresses)
 
-      // get SLP token balance for each address
-      // Dev Note: Waiting for slp-sdk to implement bulk SLP balances.
-      if (config.RESTAPI !== "bitcoin.com") {
-        const slpBalances = await this.BITBOX.SLP.Utils.balancesForAddress(
-          addresses
-        )
-        console.log(`slpBalances: ${JSON.stringify(slpBalances, null, 2)}`)
-      }
+      // get SLP utxo information for the addresses
+      const slpUtxos = await this.getSlpUtxos(addresses)
+      //console.log(`slpUtxos: ${JSON.stringify(slpUtxos, null, 2)}`)
 
       return balances
     } catch (err) {
       console.log(`Error in update-balances.js/getAddressData()`)
+      throw err
+    }
+  }
+
+  // This function expects an array of up to 20 addresses as input.
+  // Retrieve SLP Utxo information that will be saved to the wallet file.
+  async getSlpUtxos(addresses) {
+    try {
+      // Validate input.
+      if (!Array.isArray(addresses))
+        throw new Error(`addresses must be an array`)
+      if (addresses.length > 20)
+        throw new Error(`addresses array must be 20 or fewer elements.`)
+
+      // Check addresses for SLP token balances.
+      let slpBalances = []
+      if (config.RESTAPI === "bitcoin.com") {
+        slpBalances = await this.BITBOX.Utils.balancesForAddress(addresses)
+      } else {
+        /*
+        const slpBalances = await this.BITBOX.SLP.Utils.balancesForAddress(
+          addresses
+        )
+        console.log(`slpBalances: ${JSON.stringify(slpBalances, null, 2)}`)
+        */
+        throw new Error(`No SLP support for bch-js yet.`)
+      }
+
+      // Remove any empty return values.
+      const consolidatedBalances = slpBalances.filter(x => {
+        if (x.length > 0) return x
+      })
+
+      // Loop through each token and generate a list of SLP UTXOs.
+      for (let i = 0; i < consolidatedBalances.length; i++) {
+        const thisAddress = consolidatedBalances[i]
+
+        for (let j = 0; j < thisAddress.length; j++) {
+          const thisToken = thisAddress[j]
+          console.log(`thisToken: ${JSON.stringify(thisToken, null, 2)}`)
+
+          const tokenUtxo = await this.findSlpUtxo(thisToken)
+          console.log(`tokenUtxo: ${JSON.stringify(tokenUtxo, null, 2)}`)
+        }
+      }
+
+      return consolidatedBalances
+    } catch (err) {
+      console.log(`Error in update-balances.js/getSlpUtxos().`)
+      throw err
+    }
+  }
+
+  // Retrieves SLP Utxos for an address that has been identified to be holding
+  // SLP tokens.
+  async findSlpUtxo(tokenData) {
+    try {
+      console.log("hello world")
+    } catch (err) {
+      console.log(`Error in update-balances.js/findSlpUtxo().`)
       throw err
     }
   }

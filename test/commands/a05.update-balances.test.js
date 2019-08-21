@@ -17,9 +17,6 @@ const testwallet = require("../mocks/testwallet.json")
 const { bitboxMock } = require("../mocks/bitbox")
 const updateBalancesMocks = require("../mocks/mock-data")
 
-//const BB = require("bitbox-sdk").BITBOX
-//const REST_URL = { restURL: "https://trest.bitcoin.com/v2/" }
-
 // Inspect utility used for debugging.
 const util = require("util")
 util.inspect.defaultOptions = {
