@@ -204,17 +204,10 @@ class UpdateBalances extends Command {
 
       // Check addresses for SLP token balances.
       let slpBalances = []
-      if (config.RESTAPI === "bitcoin.com") {
+      if (config.RESTAPI === "bitcoin.com")
         slpBalances = await this.BITBOX.Utils.balancesForAddress(addresses)
-      } else {
-        /*
-        const slpBalances = await this.BITBOX.SLP.Utils.balancesForAddress(
-          addresses
-        )
-        console.log(`slpBalances: ${JSON.stringify(slpBalances, null, 2)}`)
-        */
-        throw new Error(`No SLP support for bch-js yet.`)
-      }
+      else
+        slpBalances = await this.BITBOX.SLP.Utils.balancesForAddress(addresses)
 
       // Remove any empty return values.
       const consolidatedBalances = slpBalances.filter(x => {
@@ -229,6 +222,7 @@ class UpdateBalances extends Command {
           const thisToken = thisAddress[j]
           console.log(`thisToken: ${JSON.stringify(thisToken, null, 2)}`)
 
+          // Add UTXO data to this token data.
           const tokenUtxo = await this.findSlpUtxo(thisToken)
           console.log(`tokenUtxo: ${JSON.stringify(tokenUtxo, null, 2)}`)
         }
@@ -245,7 +239,38 @@ class UpdateBalances extends Command {
   // SLP tokens.
   async findSlpUtxo(tokenData) {
     try {
-      console.log("hello world")
+      if (config.RESTAPI === "bitcoin.com") {
+        tokenData.cashAddress = this.BITBOX.Address.toCashAddress(
+          tokenData.slpAddress
+        )
+      } else {
+        tokenData.cashAddress = this.BITBOX.SLP.Address.toCashAddress(
+          tokenData.slpAddress
+        )
+      }
+
+      // Get utxos associated with this address.
+      let u
+      if (config.RESTAPI === "bitcoin.com")
+        u = await this.BITBOX.Address.utxo(tokenData.cashAddress)
+      else u = await this.BITBOX.Insight.Address.utxo(tokenData.cashAddress)
+
+      const utxos = u.utxos
+      console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
+
+      // Figure out which UTXOs are associated with SLP tokens.
+      let isTokenUtxo // Array of Boolean values.
+      if (config.RESTAPI === "bitcoin.com")
+        isTokenUtxo = await this.BITBOX.Utils.isTokenUtxo(utxos)
+      else isTokenUtxo = await this.BITBOX.SLP.Utils.isTokenUtxo(utxos)
+      console.log(`isTokenUtxo: ${JSON.stringify(isTokenUtxo, null, 2)}`)
+
+      // Filter out just the UTXOs that belong to SLP tokens.
+      const tokenUtxos = []
+      for (let i = 0; i < isTokenUtxo.length; i++)
+        if (isTokenUtxo[i]) tokenUtxos.push(utxos[i])
+
+      return tokenUtxos
     } catch (err) {
       console.log(`Error in update-balances.js/findSlpUtxo().`)
       throw err
