@@ -76,7 +76,7 @@ class UpdateBalances extends Command {
     //console.log(`addressData: ${util.inspect(addressData)}`)
 
     // Update hasBalance array with non-zero balances.
-    const hasBalance = this.generateHasBalance(addressData)
+    const hasBalance = this.generateHasBalance(addressData.addressData)
 
     // Sum all the balances in hasBalance to calculate total balance.
     const balance = this.sumConfirmedBalances(hasBalance, true)
@@ -88,6 +88,7 @@ class UpdateBalances extends Command {
     walletInfo.balanceConfirmed = balance.totalConfirmed
     walletInfo.balanceUnconfirmed = balance.totalUnconfirmed
     walletInfo.hasBalance = hasBalance
+    walletInfo.SLPUtxos = addressData.slpUtxoData
     await appUtils.saveWallet(filename, walletInfo)
 
     return walletInfo
@@ -98,6 +99,7 @@ class UpdateBalances extends Command {
   async getAllAddressData(walletInfo) {
     try {
       let addressData = [] // Accumulates address data.
+      let slpUtxoData = [] // Accumulates SLP token UTXOs.
       let currentIndex = 0 // tracks the current HD index.
       let batchHasBalance = true // Flag to signal when last address found.
 
@@ -114,11 +116,14 @@ class UpdateBalances extends Command {
         currentIndex += 20
 
         // Check if data has no balance. no balance == last address.
-        batchHasBalance = this.detectBalance(thisDataBatch)
+        batchHasBalance = this.detectBalance(thisDataBatch.balances)
         //console.log(`batchHasBalance: ${batchHasBalance}`)
 
         // Add data to the array, unless this last batch has no balances.
-        if (batchHasBalance) addressData = addressData.concat(thisDataBatch)
+        if (batchHasBalance) {
+          addressData = addressData.concat(thisDataBatch.balances)
+          slpUtxoData = slpUtxoData.concat(thisDataBatch.slpUtxos)
+        }
 
         //console.log(`addressData: ${util.inspect(addressData)}`)
 
@@ -126,7 +131,7 @@ class UpdateBalances extends Command {
         if (currentIndex > 10000) break
       }
 
-      return addressData
+      return { addressData, slpUtxoData }
     } catch (err) {
       console.log(`Error in update-balances.js/getAllAddressData()`)
       throw err
@@ -185,7 +190,7 @@ class UpdateBalances extends Command {
       const slpUtxos = await this.getSlpUtxos(addresses)
       //console.log(`slpUtxos: ${JSON.stringify(slpUtxos, null, 2)}`)
 
-      return balances
+      return { balances, slpUtxos }
     } catch (err) {
       console.log(`Error in update-balances.js/getAddressData()`)
       throw err
@@ -202,33 +207,33 @@ class UpdateBalances extends Command {
       if (addresses.length > 20)
         throw new Error(`addresses array must be 20 or fewer elements.`)
 
-      // Check addresses for SLP token balances.
+      // Check addresses to see if they contain any SLP tokens.
       let slpBalances = []
       if (config.RESTAPI === "bitcoin.com")
         slpBalances = await this.BITBOX.Utils.balancesForAddress(addresses)
       else
         slpBalances = await this.BITBOX.SLP.Utils.balancesForAddress(addresses)
 
-      // Remove any empty return values.
+      // Remove empty arrays (addresses that have no tokens).
       const consolidatedBalances = slpBalances.filter(x => {
         if (x.length > 0) return x
       })
 
-      // Loop through each token and generate a list of SLP UTXOs.
+      // Loop through each address that has SLP tokens.
+      let slpUtxos = []
       for (let i = 0; i < consolidatedBalances.length; i++) {
-        const thisAddress = consolidatedBalances[i]
+        const thisAddress = consolidatedBalances[i][0].slpAddress
+        //console.log(`thisAddress: ${JSON.stringify(thisAddress, null, 2)}`)
 
-        for (let j = 0; j < thisAddress.length; j++) {
-          const thisToken = thisAddress[j]
-          console.log(`thisToken: ${JSON.stringify(thisToken, null, 2)}`)
+        // Get all SLP token UTXOs associated with this address.
+        const tokenUtxos = await this.findSlpUtxos(thisAddress)
+        //console.log(`tokenUtxos: ${JSON.stringify(tokenUtxos, null, 2)}`)
 
-          // Add UTXO data to this token data.
-          const tokenUtxo = await this.findSlpUtxo(thisToken)
-          console.log(`tokenUtxo: ${JSON.stringify(tokenUtxo, null, 2)}`)
-        }
+        // Merge any new UTXOs in with the list.
+        slpUtxos = slpUtxos.concat(tokenUtxos)
       }
 
-      return consolidatedBalances
+      return slpUtxos
     } catch (err) {
       console.log(`Error in update-balances.js/getSlpUtxos().`)
       throw err
@@ -237,38 +242,44 @@ class UpdateBalances extends Command {
 
   // Retrieves SLP Utxos for an address that has been identified to be holding
   // SLP tokens.
-  async findSlpUtxo(tokenData) {
+  async findSlpUtxos(slpAddr) {
     try {
-      if (config.RESTAPI === "bitcoin.com") {
-        tokenData.cashAddress = this.BITBOX.Address.toCashAddress(
-          tokenData.slpAddress
-        )
-      } else {
-        tokenData.cashAddress = this.BITBOX.SLP.Address.toCashAddress(
-          tokenData.slpAddress
-        )
-      }
+      //console.log(`slpAddr: ${slpAddr}`)
+
+      // Convert the slpAddr to a cashAddr.
+      let cashAddr = ""
+      if (config.RESTAPI === "bitcoin.com")
+        cashAddr = this.BITBOX.Address.toCashAddress(slpAddr)
+      else cashAddr = this.BITBOX.SLP.Address.toCashAddress(slpAddr)
+
+      //console.log(`cashAddr: ${cashAddr}`)
 
       // Get utxos associated with this address.
       let u
       if (config.RESTAPI === "bitcoin.com")
-        u = await this.BITBOX.Address.utxo(tokenData.cashAddress)
-      else u = await this.BITBOX.Insight.Address.utxo(tokenData.cashAddress)
+        u = await this.BITBOX.Address.utxo(cashAddr)
+      else u = await this.BITBOX.Insight.Address.utxo(cashAddr)
 
       const utxos = u.utxos
-      console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
+      //console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
 
       // Figure out which UTXOs are associated with SLP tokens.
       let isTokenUtxo // Array of Boolean values.
       if (config.RESTAPI === "bitcoin.com")
         isTokenUtxo = await this.BITBOX.Utils.isTokenUtxo(utxos)
-      else isTokenUtxo = await this.BITBOX.SLP.Utils.isTokenUtxo(utxos)
-      console.log(`isTokenUtxo: ${JSON.stringify(isTokenUtxo, null, 2)}`)
+      else isTokenUtxo = await this.BITBOX.SLP.Utils.tokenUtxoDetails(utxos)
+      //console.log(`isTokenUtxo: ${JSON.stringify(isTokenUtxo, null, 2)}`)
 
       // Filter out just the UTXOs that belong to SLP tokens.
       const tokenUtxos = []
       for (let i = 0; i < isTokenUtxo.length; i++)
         if (isTokenUtxo[i]) tokenUtxos.push(utxos[i])
+
+      // Add address data to each UTXO.
+      for (let i = 0; i < tokenUtxos.length; i++) {
+        tokenUtxos[i].cashAddr = cashAddr
+        tokenUtxos[i].slpAddr = slpAddr
+      }
 
       return tokenUtxos
     } catch (err) {
