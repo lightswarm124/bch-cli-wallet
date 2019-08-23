@@ -279,4 +279,17 @@ describe("#update-balances.js", () => {
       })
     }
   })
+
+  describe("#findSlpUtxos", () => {
+    it(`should return utxos hydrated with token data`, async () => {
+      updateBalances.BITBOX = new config.BCHLIB({
+        restURL: config.MAINNET_REST
+      })
+
+      const slpAddr = "simpleledger:qqll3st8xl0k8cgv8dgrrrkntv6hqdn8huq2dqlz4h"
+
+      const result = await updateBalances.findSlpUtxos(slpAddr)
+      console.log(`result: ${JSON.stringify(result, null, 2)}`)
+    })
+  })
 })

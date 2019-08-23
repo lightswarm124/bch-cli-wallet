@@ -244,21 +244,21 @@ class UpdateBalances extends Command {
   // SLP tokens.
   async findSlpUtxos(slpAddr) {
     try {
-      //console.log(`slpAddr: ${slpAddr}`)
+      // console.log(`slpAddr: ${slpAddr}`)
 
       // Convert the slpAddr to a cashAddr.
       let cashAddr = ""
       if (config.RESTAPI === "bitcoin.com")
         cashAddr = this.BITBOX.Address.toCashAddress(slpAddr)
       else cashAddr = this.BITBOX.SLP.Address.toCashAddress(slpAddr)
-
-      //console.log(`cashAddr: ${cashAddr}`)
+      // console.log(`cashAddr: ${cashAddr}`)
 
       // Get utxos associated with this address.
       let u
       if (config.RESTAPI === "bitcoin.com")
         u = await this.BITBOX.Address.utxo(cashAddr)
       else u = await this.BITBOX.Insight.Address.utxo(cashAddr)
+      // console.log(`u = ${JSON.stringify(u, null, 2)}`)
 
       const utxos = u.utxos
       //console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
@@ -268,7 +268,7 @@ class UpdateBalances extends Command {
       if (config.RESTAPI === "bitcoin.com")
         isTokenUtxo = await this.BITBOX.Utils.isTokenUtxo(utxos)
       else isTokenUtxo = await this.BITBOX.SLP.Utils.tokenUtxoDetails(utxos)
-      //console.log(`isTokenUtxo: ${JSON.stringify(isTokenUtxo, null, 2)}`)
+      // console.log(`isTokenUtxo: ${JSON.stringify(isTokenUtxo, null, 2)}`)
 
       // Filter out just the UTXOs that belong to SLP tokens.
       const tokenUtxos = []
