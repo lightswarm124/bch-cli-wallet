@@ -119,22 +119,25 @@ describe("#update-balances.js", () => {
       }
     })
 
-    it("should return an array of address data", async () => {
+    it("should return an arrays of address and SLP data", async () => {
       updateBalances.BITBOX = new config.BCHLIB({
         restURL: config.TESTNET_REST
       })
 
-      // Use mocked data if this is a unit test.
+      // Mock external calls if this is a unit test.
       if (process.env.TEST === "unit") {
         sandbox
           .stub(updateBalances.BITBOX.Address, "details")
           .resolves(updateBalancesMocks.mockAddressDetails1)
+
+        sandbox.stub(updateBalances, "getSlpUtxos").resolves([])
       }
 
       const result = await updateBalances.getAddressData(mockedWallet, 0, 2)
       //console.log(`result: ${util.inspect(result)}`)
 
-      assert.isArray(result)
+      assert.isArray(result.balances)
+      assert.isArray(result.slpUtxos)
     })
   })
 
@@ -164,11 +167,20 @@ describe("#update-balances.js", () => {
         sandbox
           .stub(updateBalances, "getAddressData")
           .onFirstCall()
-          .resolves(updateBalancesMocks.mockAddressDetails1)
+          .resolves({
+            balances: updateBalancesMocks.mockAddressDetails1,
+            slpUtxos: []
+          })
           .onSecondCall()
-          .resolves(updateBalancesMocks.mockAddressDetails1)
+          .resolves({
+            balances: updateBalancesMocks.mockAddressDetails1,
+            slpUtxos: []
+          })
           .onThirdCall()
-          .resolves(updateBalancesMocks.mockAddressDetails2)
+          .resolves({
+            balances: updateBalancesMocks.mockAddressDetails2,
+            slpUtxos: []
+          })
       } else {
         updateBalances.BITBOX = new config.BCHLIB({
           restURL: config.TESTNET_REST
@@ -178,12 +190,12 @@ describe("#update-balances.js", () => {
       const result = await updateBalances.getAllAddressData(mockedWallet)
       //console.log(`result: ${util.inspect(result)}`)
 
-      assert.isArray(result)
-      //assert.equal(result.length, 4)
+      assert.isArray(result.addressData)
+      assert.isArray(result.slpUtxoData)
     })
   })
 
-  describe("#update-balances", () => {
+  describe("#validateFlags", () => {
     it("should throw error if name is not supplied.", async () => {
       try {
         await updateBalances.validateFlags({})
@@ -195,26 +207,9 @@ describe("#update-balances.js", () => {
         )
       }
     })
+  })
 
-    it("should get balances for all addresses in wallet", async () => {
-      // Use the real library if this is not a unit test.
-      if (process.env.TEST !== "unit") {
-        updateBalances.BITBOX = new config.BCHLIB({
-          restURL: config.TESTNET_REST
-        })
-      }
-
-      const balances = await updateBalances.getAddressData(
-        mockedWallet,
-        0,
-        mockedWallet.nextAddress
-      )
-      //console.log(`balances: ${util.inspect(balances)}`)
-
-      assert.isArray(balances, "Expect array of address balances")
-      assert.equal(balances.length, mockedWallet.nextAddress)
-    })
-
+  describe("#generateHasBalance", () => {
     it("generates a hasBalance array", async () => {
       // Retrieve mocked data.
       const addressData = bitboxMock.Address.details()
@@ -232,7 +227,9 @@ describe("#update-balances.js", () => {
         "cashAddress"
       ])
     })
+  })
 
+  describe("#sumConfirmedBalances", () => {
     it("should aggregate balances", async () => {
       // Retrieve mocked data
       const addressData = bitboxMock.Address.details()
@@ -244,7 +241,9 @@ describe("#update-balances.js", () => {
 
       assert.equal(balanceTotal, 0.09999752)
     })
+  })
 
+  describe("#updateBalances", () => {
     // Only run this test as an integration test.
     // DANGER! Due to the mocking used in unit tests, this test will never end.
     if (process.env.TEST !== "unit") {
