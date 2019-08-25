@@ -18,6 +18,9 @@
 
   Note: This will not send any tokens. If you run this before running
   send-all-tokens, the wallet will not have enough BCH to send the tokens.
+
+  TO-DO: once sending tokens is implemented, this command should send all
+  tokens first, then send BCH.
 */
 
 "use strict"
