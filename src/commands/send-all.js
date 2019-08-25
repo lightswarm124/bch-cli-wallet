@@ -15,6 +15,9 @@
   -Loop through each input and sign
   -Build the transaction
   -Broadcast the transaction
+
+  Note: This will not send any tokens. If you run this before running
+  send-all-tokens, the wallet will not have enough BCH to send the tokens.
 */
 
 "use strict"
