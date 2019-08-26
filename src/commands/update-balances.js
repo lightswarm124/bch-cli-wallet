@@ -243,11 +243,15 @@ class UpdateBalances extends Command {
         slpBalances = await this.BITBOX.Utils.balancesForAddress(addresses)
       else
         slpBalances = await this.BITBOX.SLP.Utils.balancesForAddress(addresses)
+      //console.log(`slpBalances: ${JSON.stringify(slpBalances, null, 2)}`)
 
       // Remove empty arrays (addresses that have no tokens).
       const consolidatedBalances = slpBalances.filter(x => {
         if (x.length > 0) return x
       })
+      console.log(
+        `consolidatedBalances: ${JSON.stringify(consolidatedBalances, null, 2)}`
+      )
 
       // Loop through each address that has SLP tokens.
       let slpUtxos = []

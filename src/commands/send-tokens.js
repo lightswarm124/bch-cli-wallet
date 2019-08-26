@@ -193,6 +193,7 @@ class SendTokens extends Command {
       */
 
       // Generate the OP_RETURN entry for an SLP SEND transaction.
+      console.log(`Generating op-return.`)
       const { script, outputs } = this.generateOpReturn(tokenUtxos, qty)
       //console.log(`script: ${JSON.stringify(script, null, 2)}`)
 
@@ -301,30 +302,42 @@ class SendTokens extends Command {
       if (change > 0) {
         outputs = 2
 
-        const baseQty = new BigNumber(sendQty).times(10 ** decimals)
-        const baseChange = new BigNumber(change).times(10 ** decimals)
+        let baseQty = new BigNumber(sendQty).times(10 ** decimals)
+        baseQty = baseQty.absoluteValue()
+        let baseQtyHex = baseQty.toString(16)
+        baseQtyHex = baseQtyHex.padStart(16, "0")
+
+        let baseChange = new BigNumber(change).times(10 ** decimals)
+        baseChange = baseChange.absoluteValue()
+        let baseChangeHex = baseChange.toString(16)
+        baseChangeHex = baseChangeHex.padStart(16, "0")
 
         script = [
           BITBOX.Script.opcodes.OP_RETURN,
           Buffer.from("534c5000", "hex"),
           BITBOX.Script.opcodes.OP_1,
           Buffer.from(`SEND`),
-          Buffer.from(tokenId),
-          Buffer.from(baseQty.toString()),
-          Buffer.from(baseChange.toString())
+          Buffer.from(tokenId, "hex"),
+          Buffer.from(baseQtyHex, "hex"),
+          Buffer.from(baseChangeHex, "hex")
         ]
       } else {
         // Corner case, when there is no token change to send back.
 
-        const baseQty = new BigNumber(sendQty).times(10 ** decimals)
+        let baseQty = new BigNumber(sendQty).times(10 ** decimals)
+        baseQty = baseQty.absoluteValue()
+        let baseQtyHex = baseQty.toString(16)
+        baseQtyHex = baseQtyHex.padStart(16, "0")
+
+        //console.log(`baseQty: ${baseQty.toString()}`)
 
         script = [
           BITBOX.Script.opcodes.OP_RETURN,
           Buffer.from("534c5000", "hex"),
           BITBOX.Script.opcodes.OP_1,
           Buffer.from(`SEND`),
-          Buffer.from(tokenId),
-          Buffer.from(baseQty.toString())
+          Buffer.from(tokenId, "hex"),
+          Buffer.from(baseQtyHex, "hex")
         ]
       }
 
@@ -382,6 +395,12 @@ class SendTokens extends Command {
     const sendAddr = flags.sendAddr
     if (!sendAddr || sendAddr === "")
       throw new Error(`You must specify a send-to address with the -a flag.`)
+
+    // // check Token Id should be hexademical chracters.
+    // let re = /^([A-Fa-f0-9]{2}){32,32}$/;
+    // if (typeof tokenIdHex !== 'string' || !re.test(tokenIdHex)) {
+    //     throw Error("TokenIdHex must be provided as a 64 character hex string.")
+    // }
 
     const tokenId = flags.tokenId
     if (!tokenId || tokenId === "")
