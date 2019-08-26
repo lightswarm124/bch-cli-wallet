@@ -122,8 +122,8 @@ class SendTokens extends Command {
         tokenUtxos
       )
 
-      // const txid = await appUtils.broadcastTx(hex)
-      // console.log(`TXID: ${txid}`)
+      const txid = await appUtils.broadcastTx(hex)
+      console.log(`TXID: ${txid}`)
     } catch (err) {
       //if (err.message) console.log(err.message)
       //else console.log(`Error in .run: `, err)
@@ -164,17 +164,18 @@ class SendTokens extends Command {
 
       // get byte count to calculate fee. paying 1 sat
       // Note: This may not be totally accurate. Just guessing on the byteCount size.
-      const byteCount = this.BITBOX.BitcoinCash.getByteCount(
-        { P2PKH: 2 },
-        { P2PKH: 3 }
-      )
-      //console.log(`byteCount: ${byteCount}`)
-      const satoshisPerByte = 1.1
-      const txFee = Math.floor(satoshisPerByte * byteCount)
-      //console.log(`txFee: ${txFee} satoshis\n`)
+      // const byteCount = this.BITBOX.BitcoinCash.getByteCount(
+      //   { P2PKH: 3 },
+      //   { P2PKH: 5 }
+      // )
+      // //console.log(`byteCount: ${byteCount}`)
+      // const satoshisPerByte = 1.1
+      // const txFee = Math.floor(satoshisPerByte * byteCount)
+      // console.log(`txFee: ${txFee} satoshis\n`)
+      const txFee = 500
 
       // amount to send back to the sending address. It's the original amount - 1 sat/byte for tx size
-      const remainder = originalAmount - txFee
+      const remainder = originalAmount - txFee - 546 * 2
       //console.log(`remainder: ${remainder}`)
 
       // Debugging.
