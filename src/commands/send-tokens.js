@@ -6,6 +6,14 @@
 
   Spends all token UTXOs for the same token and will send token change to the
   same address the BCH change.
+
+  Basic workflow of sending an SLP token:
+  - Inputs:
+    - token Id, amount, input token UTXOs, input BCH payment UTXO, token output addr, token change addr, bch change addr
+    - Note: All UTXOs for the same token should be spent. This will consolidate token UTXOs.
+  - Validate inputs
+  - Convert token quantities into their base denomination (satoshis) with BigNumber lib.
+  - Generate the OP_RETURN transaction
 */
 
 "use strict"
@@ -26,7 +34,7 @@ util.inspect.defaultOptions = { depth: 2 }
 
 const { Command, flags } = require("@oclif/command")
 
-class Send extends Command {
+class SendTokens extends Command {
   constructor(argv, config) {
     super(argv, config)
     //_this = this
@@ -36,14 +44,15 @@ class Send extends Command {
 
   async run() {
     try {
-      const { flags } = this.parse(Send)
+      const { flags } = this.parse(SendTokens)
 
       // Ensure flags meet qualifiying critieria.
       this.validateFlags(flags)
 
       const name = flags.name // Name of the wallet.
-      const bch = flags.bch // Amount to send in BCH.
+      const qty = flags.qty // Amount to send in BCH.
       const sendToAddr = flags.sendAddr // The address to send to.
+      const tokenId = flags.tokenId // SLP token ID.
 
       // Open the wallet data file.
       const filename = `${__dirname}/../../wallets/${name}.json`
@@ -62,18 +71,36 @@ class Send extends Command {
       const updateBalances = new UpdateBalances()
       updateBalances.BITBOX = this.BITBOX
       walletInfo = await updateBalances.updateBalances(filename, walletInfo)
+      console.log(`walletInfo: ${JSON.stringify(walletInfo, null, 2)}`)
+
+      // Get a list of token UTXOs for this token.
+      const tokenUtxos = walletInfo.SLPUtxos.filter(x => x.tokenId === tokenId)
+      if (tokenUtxos.length === 0) {
+        this.log(`No tokens in the wallet matched the given token ID.`)
+        return
+      }
+      console.log(`tokenUtxos: ${JSON.stringify(tokenUtxos, null, 2)}`)
 
       // Get info on UTXOs controlled by this wallet.
       const utxos = await appUtils.getUTXOs(walletInfo)
+      if (utxos.length === 0) {
+        this.log(
+          `No BCH UTXOs found in wallet. No way to pay miner fees for transaction.`
+        )
+        return
+      }
       //console.log(`send utxos: ${util.inspect(utxos)}`)
 
       // Select optimal UTXO
-      const utxo = await this.selectUTXO(bch, utxos)
-      //console.log(`selected utxo: ${util.inspect(utxo)}`)
+      // TODO: Figure out the appropriate amount of BCH to use in selectUTXO()
+      const utxo = await this.selectUTXO(0.000005, utxos)
+      console.log(`selected utxo: ${util.inspect(utxo)}`)
 
       // Exit if there is no UTXO big enough to fulfill the transaction.
       if (!utxo.amount) {
-        this.log(`Could not find a UTXO big enough for this transaction.`)
+        this.log(
+          `Could not find a UTXO big enough for this transaction. More BCH needed.`
+        )
         return
       }
 
@@ -81,20 +108,20 @@ class Send extends Command {
       const getAddress = new GetAddress()
       getAddress.BITBOX = this.BITBOX
       const changeAddress = await getAddress.getAddress(filename)
-      //console.log(`changeAddress: ${changeAddress}`)
+      console.log(`changeAddress: ${changeAddress}`)
 
-      // Send the BCH, transfer change to the new address
-      const hex = await this.sendBCH(
-        utxo,
-        bch,
-        changeAddress,
-        sendToAddr,
-        walletInfo
-      )
+      // Send the token, transfer change to the new address
+      // const hex = await this.sendTokens(
+      //   utxo,
+      //   qty,
+      //   changeAddress,
+      //   sendToAddr,
+      //   walletInfo,
+      //   tokenUtxos
+      // )
 
-      const txid = await appUtils.broadcastTx(hex)
-
-      console.log(`TXID: ${txid}`)
+      // const txid = await appUtils.broadcastTx(hex)
+      // console.log(`TXID: ${txid}`)
     } catch (err) {
       //if (err.message) console.log(err.message)
       //else console.log(`Error in .run: `, err)
@@ -103,7 +130,14 @@ class Send extends Command {
   }
 
   // Sends BCH to
-  async sendBCH(utxo, bch, changeAddress, sendToAddr, walletInfo) {
+  async sendTokens(
+    utxo,
+    bch,
+    changeAddress,
+    sendToAddr,
+    walletInfo,
+    tokenUtxos
+  ) {
     try {
       //console.log(`utxo: ${util.inspect(utxo)}`)
 
@@ -234,24 +268,32 @@ class Send extends Command {
     if (!name || name === "")
       throw new Error(`You must specify a wallet with the -n flag.`)
 
-    const bch = flags.bch
-    if (isNaN(Number(bch)))
-      throw new Error(`You must specify a quantity in BCH with the -b flag.`)
+    const qty = flags.qty
+    if (isNaN(Number(qty)))
+      throw new Error(`You must specify a quantity of tokens with the -q flag.`)
 
     const sendAddr = flags.sendAddr
     if (!sendAddr || sendAddr === "")
       throw new Error(`You must specify a send-to address with the -a flag.`)
 
+    const tokenId = flags.tokenId
+    if (!tokenId || tokenId === "")
+      throw new Error(`You must specifcy the SLP token ID`)
+
     return true
   }
 }
 
-Send.description = `Send an amount of BCH`
+SendTokens.description = `Send SLP tokens.`
 
-Send.flags = {
+SendTokens.flags = {
   name: flags.string({ char: "n", description: "Name of wallet" }),
-  bch: flags.string({ char: "b", description: "Quantity in BCH" }),
-  sendAddr: flags.string({ char: "a", description: "Cash address to send to" })
+  tokenId: flags.string({ char: "t", description: "Token ID" }),
+  sendAddr: flags.string({
+    char: "a",
+    description: "Cash or SimpleLedger address to send to"
+  }),
+  qty: flags.string({ char: "q", decription: "Quantity of tokens to send" })
 }
 
-module.exports = Send
+module.exports = SendTokens
