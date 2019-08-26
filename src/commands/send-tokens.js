@@ -240,16 +240,29 @@ class SendTokens extends Command {
       )
 
       // Sign each token UTXO being consumed.
-      for (let i=0; i < tokenUtxos.length; i++) 
+      for (let i = 0; i < tokenUtxos.length; i++) {
         const thisUtxo = tokenUtxos[i]
 
-        // TO-DO: Update-Balance needs to add the address index of the HD node
-        // in order to generate the private-key for the SLP UTXOs.
+        // Generate a keypair to sign the SLP UTXO.
+        const slpChangeAddr = await appUtils.changeAddrFromMnemonic(
+          walletInfo,
+          thisUtxo.hdIndex
+        )
+        //console.log(`slpChangeAddr: ${JSON.stringify(slpChangeAddr, null, 2)}`)
+        console.log(
+          `slpChangeAddr: ${this.BITBOX.HDNode.toCashAddress(slpChangeAddr)}`
+        )
+        const slpKeyPair = this.BITBOX.HDNode.toKeyPair(slpChangeAddr)
+        //console.log(`slpKeyPair: ${JSON.stringify(slpKeyPair, null, 2)}`)
 
-        // transactionBuilder.sign(
-        //   0
-        // )
-      
+        transactionBuilder.sign(
+          1 + i,
+          slpKeyPair,
+          redeemScript,
+          transactionBuilder.hashTypes.SIGHASH_ALL,
+          thisUtxo.satoshis
+        )
+      }
 
       // build tx
       const tx = transactionBuilder.build()
@@ -261,7 +274,7 @@ class SendTokens extends Command {
 
       return hex
     } catch (err) {
-      console.log(`Error in sendBCH()`)
+      console.log(`Error in sendTokens()`)
       throw err
     }
   }
