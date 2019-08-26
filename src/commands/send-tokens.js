@@ -25,6 +25,8 @@ const config = require("../../config")
 const AppUtils = require("../util")
 const appUtils = new AppUtils()
 
+const BigNumber = require("bignumber.js")
+
 // Mainnet by default
 const BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
 
@@ -111,14 +113,14 @@ class SendTokens extends Command {
       console.log(`changeAddress: ${changeAddress}`)
 
       // Send the token, transfer change to the new address
-      // const hex = await this.sendTokens(
-      //   utxo,
-      //   qty,
-      //   changeAddress,
-      //   sendToAddr,
-      //   walletInfo,
-      //   tokenUtxos
-      // )
+      const hex = await this.sendTokens(
+        utxo,
+        qty,
+        changeAddress,
+        sendToAddr,
+        walletInfo,
+        tokenUtxos
+      )
 
       // const txid = await appUtils.broadcastTx(hex)
       // console.log(`TXID: ${txid}`)
@@ -129,10 +131,10 @@ class SendTokens extends Command {
     }
   }
 
-  // Sends BCH to
+  // Generates the transaction in hex format, ready to broadcast to network.
   async sendTokens(
     utxo,
-    bch,
+    qty,
     changeAddress,
     sendToAddr,
     walletInfo,
@@ -147,20 +149,24 @@ class SendTokens extends Command {
         transactionBuilder = new this.BITBOX.TransactionBuilder("testnet")
       else transactionBuilder = new this.BITBOX.TransactionBuilder()
 
-      const satoshisToSend = Math.floor(bch * 100000000)
+      //const satoshisToSend = Math.floor(bch * 100000000)
       //console.log(`Amount to send in satoshis: ${satoshisToSend}`)
       const originalAmount = utxo.satoshis
-
       const vout = utxo.vout
       const txid = utxo.txid
 
-      // add input with txid and index of vout
+      // add input utxo to pay for transaction.
       transactionBuilder.addInput(txid, vout)
 
-      // get byte count to calculate fee. paying 1 sat/byte
+      // add each token UTXO as an input.
+      for (let i = 0; i < tokenUtxos.length; i++)
+        transactionBuilder.addInput(tokenUtxos[i].txid, tokenUtxos[i].vout)
+
+      // get byte count to calculate fee. paying 1 sat
+      // Note: This may not be totally accurate. Just guessing on the byteCount size.
       const byteCount = this.BITBOX.BitcoinCash.getByteCount(
-        { P2PKH: 1 },
-        { P2PKH: 2 }
+        { P2PKH: 2 },
+        { P2PKH: 3 }
       )
       //console.log(`byteCount: ${byteCount}`)
       const satoshisPerByte = 1.1
@@ -168,7 +174,7 @@ class SendTokens extends Command {
       //console.log(`txFee: ${txFee} satoshis\n`)
 
       // amount to send back to the sending address. It's the original amount - 1 sat/byte for tx size
-      const remainder = originalAmount - satoshisToSend - txFee
+      const remainder = originalAmount - txFee
       //console.log(`remainder: ${remainder}`)
 
       // Debugging.
@@ -185,11 +191,31 @@ class SendTokens extends Command {
       console.log(`Paying a transaction fee of ${txFee} satoshis`)
       */
 
-      // add output w/ address and amount to send
+      // Generate the OP_RETURN entry for an SLP SEND transaction.
+      const { script, outputs } = this.generateOpReturn(tokenUtxos, qty)
+      //console.log(`script: ${JSON.stringify(script, null, 2)}`)
+
+      const data = BITBOX.Script.encode(script)
+      //console.log(`data: ${JSON.stringify(data, null, 2)}`)
+
+      // Add OP_RETURN as first output.
+      transactionBuilder.addOutput(data, 0)
+
+      // Send dust transaction representing tokens being sent.
       transactionBuilder.addOutput(
         this.BITBOX.Address.toLegacyAddress(sendToAddr),
-        satoshisToSend
+        546
       )
+
+      // Return any token change back to the sender.
+      if (outputs > 1) {
+        transactionBuilder.addOutput(
+          this.BITBOX.Address.toLegacyAddress(changeAddress),
+          546
+        )
+      }
+
+      // Last output: send the change back to the wallet.
       transactionBuilder.addOutput(
         this.BITBOX.Address.toLegacyAddress(changeAddress),
         remainder
@@ -203,7 +229,7 @@ class SendTokens extends Command {
       //console.log(`change: ${JSON.stringify(change, null, 2)}`)
       const keyPair = this.BITBOX.HDNode.toKeyPair(change)
 
-      // Sign the transaction with the HD node.
+      // Sign the transaction with the private key for the UTXO paying the fees.
       let redeemScript
       transactionBuilder.sign(
         0,
@@ -213,17 +239,84 @@ class SendTokens extends Command {
         originalAmount
       )
 
+      // Sign each token UTXO being consumed.
+      for (let i=0; i < tokenUtxos.length; i++) 
+        const thisUtxo = tokenUtxos[i]
+
+        // TO-DO: Update-Balance needs to add the address index of the HD node
+        // in order to generate the private-key for the SLP UTXOs.
+
+        // transactionBuilder.sign(
+        //   0
+        // )
+      
+
       // build tx
       const tx = transactionBuilder.build()
 
       // output rawhex
       const hex = tx.toHex()
-      //console.log(`Transaction raw hex: `)
-      //console.log(hex)
+      console.log(`Transaction raw hex: `)
+      console.log(hex)
 
       return hex
     } catch (err) {
       console.log(`Error in sendBCH()`)
+      throw err
+    }
+  }
+
+  // Generate the OP_RETURN script for an SLP Send transaction.
+  // It's assumed all elements in the tokenUtxos array belong to the same token.
+  generateOpReturn(tokenUtxos, sendQty) {
+    try {
+      const tokenId = tokenUtxos[0].tokenId
+      const decimals = tokenUtxos[0].decimals
+
+      // Calculate the total amount of tokens owned by the wallet.
+      let totalTokens = 0
+      for (let i = 0; i < tokenUtxos.length; i++)
+        totalTokens += tokenUtxos[i].tokenQty
+
+      const change = totalTokens - sendQty
+
+      let script
+      let outputs = 1
+
+      // The normal case, when there is token change to return to sender.
+      if (change > 0) {
+        outputs = 2
+
+        const baseQty = new BigNumber(sendQty).times(10 ** decimals)
+        const baseChange = new BigNumber(change).times(10 ** decimals)
+
+        script = [
+          BITBOX.Script.opcodes.OP_RETURN,
+          Buffer.from("534c5000", "hex"),
+          BITBOX.Script.opcodes.OP_1,
+          Buffer.from(`SEND`),
+          Buffer.from(tokenId),
+          Buffer.from(baseQty.toString()),
+          Buffer.from(baseChange.toString())
+        ]
+      } else {
+        // Corner case, when there is no token change to send back.
+
+        const baseQty = new BigNumber(sendQty).times(10 ** decimals)
+
+        script = [
+          BITBOX.Script.opcodes.OP_RETURN,
+          Buffer.from("534c5000", "hex"),
+          BITBOX.Script.opcodes.OP_1,
+          Buffer.from(`SEND`),
+          Buffer.from(tokenId),
+          Buffer.from(baseQty.toString())
+        ]
+      }
+
+      return { script, outputs }
+    } catch (err) {
+      console.log(`Error in generateOpReturn()`)
       throw err
     }
   }
