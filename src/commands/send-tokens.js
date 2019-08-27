@@ -334,7 +334,8 @@ class SendTokens extends Command {
         script = [
           BITBOX.Script.opcodes.OP_RETURN,
           Buffer.from("534c5000", "hex"),
-          BITBOX.Script.opcodes.OP_1,
+          //BITBOX.Script.opcodes.OP_1,
+          Buffer.from("0101", "hex"),
           Buffer.from(`SEND`),
           Buffer.from(tokenId, "hex"),
           Buffer.from(baseQtyHex, "hex")

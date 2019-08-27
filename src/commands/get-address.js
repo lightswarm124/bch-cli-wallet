@@ -49,9 +49,13 @@ class GetAddress extends Command {
       // Display the address as a QR code.
       qrcode.generate(newAddress, { small: true })
 
+      const slpAddr = this.BITBOX.SLP.Address.toSLPAddress(newAddress)
+      const legacy = this.BITBOX.Address.toLegacyAddress(newAddress)
+
       // Display the address to the user.
-      this.log(`${newAddress}`)
-      //this.log(`legacy address: ${legacy}`)
+      this.log(`cash address: ${newAddress}`)
+      this.log(`SLP address: ${slpAddr}`)
+      this.log(`legacy address: ${legacy}`)
     } catch (err) {
       if (err.message) console.log(err.message)
       else console.log(`Error in GetAddress.run: `, err)
