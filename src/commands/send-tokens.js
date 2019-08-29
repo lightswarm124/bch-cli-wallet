@@ -95,7 +95,7 @@ class SendTokens extends Command {
 
       // Select optimal UTXO
       // TODO: Figure out the appropriate amount of BCH to use in selectUTXO()
-      const utxo = await this.selectUTXO(0.000005, utxos)
+      const utxo = await this.selectUTXO(0.000015, utxos)
       console.log(`selected utxo: ${util.inspect(utxo)}`)
 
       // Exit if there is no UTXO big enough to fulfill the transaction.
@@ -176,6 +176,8 @@ class SendTokens extends Command {
 
       // amount to send back to the sending address. It's the original amount - 1 sat/byte for tx size
       const remainder = originalAmount - txFee - 546 * 2
+      if (remainder < 1)
+        throw new Error(`Selected UTXO does not have enough satoshis`)
       //console.log(`remainder: ${remainder}`)
 
       // Debugging.
@@ -315,7 +317,8 @@ class SendTokens extends Command {
         script = [
           BITBOX.Script.opcodes.OP_RETURN,
           Buffer.from("534c5000", "hex"),
-          BITBOX.Script.opcodes.OP_1,
+          //BITBOX.Script.opcodes.OP_1,
+          Buffer.from("0001", "hex"),
           Buffer.from(`SEND`),
           Buffer.from(tokenId, "hex"),
           Buffer.from(baseQtyHex, "hex"),
@@ -335,7 +338,7 @@ class SendTokens extends Command {
           BITBOX.Script.opcodes.OP_RETURN,
           Buffer.from("534c5000", "hex"),
           //BITBOX.Script.opcodes.OP_1,
-          Buffer.from("0101", "hex"),
+          Buffer.from("0001", "hex"),
           Buffer.from(`SEND`),
           Buffer.from(tokenId, "hex"),
           Buffer.from(baseQtyHex, "hex")

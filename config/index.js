@@ -28,14 +28,14 @@ if (RESTAPI === "bitcoin.com") {
 }
 
 if (RESTAPI === "local") {
-  config.BCHLIB = BCHJS
+  config.BCHLIB = BCHJS.BitboxShim()
   config.MAINNET_REST = `http://192.168.0.36:12400/v3/`
   config.TESTNET_REST = `http://192.168.0.38:13400/v3/`
   config.RESTAPI = "local"
 }
 
 if (RESTAPI === "decatur") {
-  config.BCHLIB = BCHJS
+  config.BCHLIB = BCHJS.BitboxShim()
   config.MAINNET_REST = `http://decatur.hopto.org:12400/v3/`
   config.TESTNET_REST = `http://decatur.hopto.org:13400/v3/`
   config.RESTAPI = "decatur"

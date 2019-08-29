@@ -211,10 +211,11 @@ class UpdateBalances extends Command {
       //console.log(`addresses: ${util.inspect(addresses)}`)
 
       // get BCH balance and details for each address.
-      let balances
-      if (config.RESTAPI === "bitcoin.com")
-        balances = await this.BITBOX.Address.details(addresses)
-      else balances = await this.BITBOX.Insight.Address.details(addresses)
+      // let balances
+      // if (config.RESTAPI === "bitcoin.com")
+      //   balances = await this.BITBOX.Address.details(addresses)
+      // else balances = await this.BITBOX.Insight.Address.details(addresses)
+      const balances = await this.BITBOX.Address.details(addresses)
 
       // get SLP utxo information for the addresses
       const slpUtxos = await this.getSlpUtxos(addresses)
@@ -238,11 +239,12 @@ class UpdateBalances extends Command {
         throw new Error(`addresses array must be 20 or fewer elements.`)
 
       // Check addresses to see if they contain any SLP tokens.
-      let slpBalances = []
-      if (config.RESTAPI === "bitcoin.com")
-        slpBalances = await this.BITBOX.Utils.balancesForAddress(addresses)
-      else
-        slpBalances = await this.BITBOX.SLP.Utils.balancesForAddress(addresses)
+      // let slpBalances = []
+      // if (config.RESTAPI === "bitcoin.com")
+      //   slpBalances = await this.BITBOX.Utils.balancesForAddress(addresses)
+      // else
+      //   slpBalances = await this.BITBOX.SLP.Utils.balancesForAddress(addresses)
+      const slpBalances = await this.BITBOX.Util.balancesForAddress(addresses)
       //console.log(`slpBalances: ${JSON.stringify(slpBalances, null, 2)}`)
 
       // Remove empty arrays (addresses that have no tokens).
@@ -281,27 +283,30 @@ class UpdateBalances extends Command {
       // console.log(`slpAddr: ${slpAddr}`)
 
       // Convert the slpAddr to a cashAddr.
-      let cashAddr = ""
-      if (config.RESTAPI === "bitcoin.com")
-        cashAddr = this.BITBOX.Address.toCashAddress(slpAddr)
-      else cashAddr = this.BITBOX.SLP.Address.toCashAddress(slpAddr)
+      // let cashAddr = ""
+      // if (config.RESTAPI === "bitcoin.com")
+      //   cashAddr = this.BITBOX.Address.toCashAddress(slpAddr)
+      // else cashAddr = this.BITBOX.SLP.Address.toCashAddress(slpAddr)
+      const cashAddr = this.BITBOX.Address.toCashAddress(slpAddr)
       // console.log(`cashAddr: ${cashAddr}`)
 
       // Get utxos associated with this address.
-      let u
-      if (config.RESTAPI === "bitcoin.com")
-        u = await this.BITBOX.Address.utxo(cashAddr)
-      else u = await this.BITBOX.Insight.Address.utxo(cashAddr)
+      // let u
+      // if (config.RESTAPI === "bitcoin.com")
+      //   u = await this.BITBOX.Address.utxo(cashAddr)
+      // else u = await this.BITBOX.Insight.Address.utxo(cashAddr)
+      const u = await this.BITBOX.Address.utxo(cashAddr)
       // console.log(`u = ${JSON.stringify(u, null, 2)}`)
 
       const utxos = u.utxos
       //console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
 
       // Figure out which UTXOs are associated with SLP tokens.
-      let isTokenUtxo // Array of Boolean values.
-      if (config.RESTAPI === "bitcoin.com")
-        isTokenUtxo = await this.BITBOX.Utils.isTokenUtxo(utxos)
-      else isTokenUtxo = await this.BITBOX.SLP.Utils.tokenUtxoDetails(utxos)
+      // let isTokenUtxo // Array of Boolean values.
+      // if (config.RESTAPI === "bitcoin.com")
+      //   isTokenUtxo = await this.BITBOX.Utils.isTokenUtxo(utxos)
+      // else isTokenUtxo = await this.BITBOX.SLP.Utils.tokenUtxoDetails(utxos)
+      const isTokenUtxo = await this.BITBOX.Util.tokenUtxoDetails(utxos)
       // console.log(`isTokenUtxo: ${JSON.stringify(isTokenUtxo, null, 2)}`)
 
       // Filter out just the UTXOs that belong to SLP tokens.
