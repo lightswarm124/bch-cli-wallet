@@ -318,7 +318,7 @@ class SendTokens extends Command {
           BITBOX.Script.opcodes.OP_RETURN,
           Buffer.from("534c5000", "hex"),
           //BITBOX.Script.opcodes.OP_1,
-          Buffer.from("0001", "hex"),
+          Buffer.from("01", "hex"),
           Buffer.from(`SEND`),
           Buffer.from(tokenId, "hex"),
           Buffer.from(baseQtyHex, "hex"),
@@ -338,7 +338,7 @@ class SendTokens extends Command {
           BITBOX.Script.opcodes.OP_RETURN,
           Buffer.from("534c5000", "hex"),
           //BITBOX.Script.opcodes.OP_1,
-          Buffer.from("0001", "hex"),
+          Buffer.from("01", "hex"),
           Buffer.from(`SEND`),
           Buffer.from(tokenId, "hex"),
           Buffer.from(baseQtyHex, "hex")
@@ -387,6 +387,8 @@ class SendTokens extends Command {
 
   // Validate the proper flags are passed in.
   validateFlags(flags) {
+    //console.log(`flags: ${JSON.stringify(flags, null, 2)}`)
+
     // Exit if wallet not specified.
     const name = flags.name
     if (!name || name === "")
