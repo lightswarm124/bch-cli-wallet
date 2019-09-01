@@ -39,10 +39,7 @@ class AppUtils {
         const thisAddr = walletInfo.hasBalance[i].cashAddress
 
         // Get the UTXOs for that address.
-        let u
-        if (config.RESTAPI === "bitcoin.com")
-          u = await this.BITBOX.Address.utxo(thisAddr)
-        else u = await this.BITBOX.Insight.Address.utxo(thisAddr)
+        const u = await this.BITBOX.Address.utxo(thisAddr)
         //console.log(`u for ${thisAddr}: ${JSON.stringify(u, null, 2)}`)
 
         const utxos = u.utxos
@@ -51,23 +48,26 @@ class AppUtils {
         // Loop through each UXTO returned
         for (var j = 0; j < utxos.length; j++) {
           const thisUTXO = utxos[j]
-          console.log(`thisUTXO: ${util.inspect(thisUTXO)}`)
+          //console.log(`thisUTXO: ${util.inspect(thisUTXO)}`)
 
           // Add the HD node index to the UTXO for use later.
           thisUTXO.hdIndex = walletInfo.hasBalance[i].index
 
-          // Determine if this UTXO is in the token UTXO list.
-          const isToken = walletInfo.SLPUtxos.filter(slpEntry => {
-            if (
-              slpEntry.txid === thisUTXO.txid &&
-              slpEntry.vout === thisUTXO.vout
-            )
-              return slpEntry
-          })
-          console.log(`isToken: ${JSON.stringify(isToken, null, 2)}`)
+          // Only check against SLP UTXOs, if hte SLPUtxos array exists.
+          if (walletInfo.SLPUtxos) {
+            // Determine if this UTXO is in the token UTXO list.
+            const isToken = walletInfo.SLPUtxos.filter(slpEntry => {
+              if (
+                slpEntry.txid === thisUTXO.txid &&
+                slpEntry.vout === thisUTXO.vout
+              )
+                return slpEntry
+            })
+            //console.log(`isToken: ${JSON.stringify(isToken, null, 2)}`)
 
-          // Discard this UTXO if it belongs to a token transaction.
-          if (isToken.length > 0) continue
+            // Discard this UTXO if it belongs to a token transaction.
+            if (isToken.length > 0) continue
+          }
 
           // Add the UTXO to the array if it has at least one confirmation.
           // Dev Note: Enable the line below if you want a more conservative
@@ -79,7 +79,7 @@ class AppUtils {
         }
       }
 
-      console.log(`retArray: ${JSON.stringify(retArray, null, 2)}`)
+      //console.log(`retArray: ${JSON.stringify(retArray, null, 2)}`)
       return retArray
     } catch (err) {
       console.log(`Error in getUTXOs.`, err)
