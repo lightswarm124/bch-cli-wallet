@@ -79,7 +79,7 @@ class CreateWallet extends Command {
       // HDNode of BIP44 account
       const account = this.BITBOX.HDNode.derivePath(
         masterHDNode,
-        "m/44'/145'/0'"
+        "m/44'/245'/0'"
       )
 
       // derive the first external change address HDNode which is going to spend utxo

@@ -330,7 +330,7 @@ class UpdateBalances extends Command {
     else var masterHDNode = this.BITBOX.HDNode.fromSeed(rootSeed)
 
     // HDNode of BIP44 account
-    const account = this.BITBOX.HDNode.derivePath(masterHDNode, "m/44'/145'/0'")
+    const account = this.BITBOX.HDNode.derivePath(masterHDNode, "m/44'/245'/0'")
 
     // Empty array for collecting generated addresses
     const bulkAddresses = []
