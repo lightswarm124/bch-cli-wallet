@@ -146,9 +146,20 @@ describe("#send-tokens", () => {
     })
   })
 
-  // describe("#getTokenUtxos", () => {
-  //
-  // })
+  describe("#getTokenUtxos", () => {
+    it("should throw an error if there are no matching token utxos in wallet.", () => {
+      try {
+        const tokenId = `c4b0d62156b3fa5c8f3436079b5394f7edc1bef5dc1cd2f9d0c4d46f82cca479`
+        sendTokens.getTokenUtxos(tokenId, mockedWallet)
+      } catch (err) {
+        assert.include(
+          err.message,
+          `No tokens in the wallet matched the given token ID`,
+          "Expected error message."
+        )
+      }
+    })
+  })
 
   /*
 

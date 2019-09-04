@@ -259,6 +259,16 @@ class UpdateBalances extends Command {
 
       return slpUtxos
     } catch (err) {
+      // If SLPDB is down, the REST API will return a 404.
+      // Returning an empty array will force the update-balances function to
+      // continue processing without it.
+      if (err.status === 404) {
+        this.log(
+          `CAUTION: Could not communicate with SLPDB. If you continue, this app may burn tokens in this wallet.`
+        )
+        return [[]]
+      }
+
       console.log(`Error in update-balances.js/getSlpUtxos().`)
       throw err
     }
