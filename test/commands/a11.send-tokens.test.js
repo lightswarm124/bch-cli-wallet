@@ -10,7 +10,7 @@ const assert = require("chai").assert
 const sinon = require("sinon")
 
 // Library under test.
-const Send = require("../../src/commands/send")
+const SendTokens = require("../../src/commands/send-tokens")
 const config = require("../../config")
 
 // Mock data
@@ -28,10 +28,10 @@ util.inspect.defaultOptions = {
 // Set default environment variables for unit tests.
 if (!process.env.TEST) process.env.TEST = "unit"
 
-describe("send", () => {
+describe("#send-tokens", () => {
   let BITBOX
   let mockedWallet
-  let send
+  let sendTokens
   let sandbox
 
   beforeEach(() => {
@@ -41,8 +41,8 @@ describe("send", () => {
 
     sandbox = sinon.createSandbox()
 
-    send = new Send()
-    send.BITBOX = BITBOX
+    sendTokens = new SendTokens()
+    sendTokens.BITBOX = BITBOX
   })
 
   afterEach(() => {
@@ -52,7 +52,7 @@ describe("send", () => {
   describe("#validateFlags", () => {
     it("should throw error if name is not supplied.", () => {
       try {
-        send.validateFlags({})
+        sendTokens.validateFlags({})
       } catch (err) {
         assert.include(
           err.message,
@@ -62,17 +62,17 @@ describe("send", () => {
       }
     })
 
-    it("should throw error if BCH quantity is not supplied.", () => {
+    it("should throw error if token quantity is not supplied.", () => {
       try {
         const flags = {
           name: `testwallet`
         }
 
-        send.validateFlags(flags)
+        sendTokens.validateFlags(flags)
       } catch (err) {
         assert.include(
           err.message,
-          `You must specify a quantity in BCH with the -b flag.`,
+          `You must specify a quantity of tokens with the -q flag`,
           "Expected error message."
         )
       }
@@ -82,10 +82,10 @@ describe("send", () => {
       try {
         const flags = {
           name: `testwallet`,
-          bch: 0.000005
+          qty: 0.1
         }
 
-        send.validateFlags(flags)
+        sendTokens.validateFlags(flags)
       } catch (err) {
         assert.include(
           err.message,
@@ -95,42 +95,62 @@ describe("send", () => {
       }
     })
 
+    it("should throw error if token ID is not supplied.", () => {
+      try {
+        const flags = {
+          name: `testwallet`,
+          qty: 0.1,
+          sendAddr: "abc"
+        }
+
+        sendTokens.validateFlags(flags)
+      } catch (err) {
+        assert.include(
+          err.message,
+          `You must specifcy the SLP token ID`,
+          "Expected error message."
+        )
+      }
+    })
+
+    it("should throw error if token ID is not valid.", () => {
+      try {
+        const flags = {
+          name: `testwallet`,
+          qty: 0.1,
+          sendAddr: "abc",
+          tokenId: "abc"
+        }
+
+        sendTokens.validateFlags(flags)
+      } catch (err) {
+        assert.include(
+          err.message,
+          `TokenIdHex must be provided as a 64 character hex string`,
+          "Expected error message."
+        )
+      }
+    })
+
     it("should return true if all flags are supplied.", () => {
       const flags = {
         name: `testwallet`,
-        bch: 0.000005,
-        sendAddr: `abc`
+        qty: 1.5,
+        sendAddr: `abc`,
+        tokenId: `c4b0d62156b3fa5c8f3436079b5394f7edc1bef5dc1cd2f9d0c4d46f82cca479`
       }
 
-      const result = send.validateFlags(flags)
+      const result = sendTokens.validateFlags(flags)
 
       assert.equal(result, true)
     })
   })
 
-  describe("#selectUTXO", () => {
-    it("should select a single UTXO", async () => {
-      const bch = 0.0001
-      const utxos = bitboxMock.Address.utxo()
+  // describe("#getTokenUtxos", () => {
+  //
+  // })
 
-      const utxo = await send.selectUTXO(bch, utxos.utxos, BITBOX)
-      //console.log(`utxo: ${util.inspect(utxo)}`)
-
-      assert.isObject(utxo, "Expect single utxo object")
-      assert.hasAllKeys(utxo, [
-        "txid",
-        "vout",
-        "amount",
-        "satoshis",
-        "height",
-        "confirmations"
-        //"hdIndex"
-      ])
-
-      // Since this test uses mocked data, the values are known ahead of time.
-      assert.equal(utxo.amount, 0.00079504)
-    })
-  })
+  /*
 
   describe("#sendBCH", () => {
     it("should send BCH on testnet", async () => {
@@ -194,4 +214,5 @@ describe("send", () => {
       assert.isString(hex)
     })
   })
+  */
 })

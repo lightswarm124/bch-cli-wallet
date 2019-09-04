@@ -20,6 +20,7 @@
 
 const GetAddress = require("./get-address")
 const UpdateBalances = require("./update-balances")
+const Send = require("./send")
 const config = require("../../config")
 
 const AppUtils = require("../util")
@@ -76,12 +77,13 @@ class SendTokens extends Command {
       console.log(`walletInfo: ${JSON.stringify(walletInfo, null, 2)}`)
 
       // Get a list of token UTXOs for this token.
-      const tokenUtxos = walletInfo.SLPUtxos.filter(x => x.tokenId === tokenId)
-      if (tokenUtxos.length === 0) {
-        this.log(`No tokens in the wallet matched the given token ID.`)
-        return
-      }
-      console.log(`tokenUtxos: ${JSON.stringify(tokenUtxos, null, 2)}`)
+      // const tokenUtxos = walletInfo.SLPUtxos.filter(x => x.tokenId === tokenId)
+      // if (tokenUtxos.length === 0) {
+      //   this.log(`No tokens in the wallet matched the given token ID.`)
+      //   return
+      // }
+      // console.log(`tokenUtxos: ${JSON.stringify(tokenUtxos, null, 2)}`)
+      const tokenUtxos = this.getTokenUtxos(tokenId, walletInfo)
 
       // Get info on UTXOs controlled by this wallet.
       const utxos = await appUtils.getUTXOs(walletInfo)
@@ -95,7 +97,8 @@ class SendTokens extends Command {
 
       // Select optimal UTXO
       // TODO: Figure out the appropriate amount of BCH to use in selectUTXO()
-      const utxo = await this.selectUTXO(0.000015, utxos)
+      const send = new Send()
+      const utxo = await send.selectUTXO(0.000015, utxos)
       console.log(`selected utxo: ${util.inspect(utxo)}`)
 
       // Exit if there is no UTXO big enough to fulfill the transaction.
@@ -283,6 +286,24 @@ class SendTokens extends Command {
     }
   }
 
+  // Retrieve UTXOs associated with the user-specified token. Throws an error
+  // if no UTXOs for that token can be found.
+  getTokenUtxos(tokenId, walletInfo) {
+    try {
+      const tokenUtxos = walletInfo.SLPUtxos.filter(x => x.tokenId === tokenId)
+      if (tokenUtxos.length === 0)
+        throw new Error(`No tokens in the wallet matched the given token ID.`)
+
+      // For debugging:
+      console.log(`tokenUtxos: ${JSON.stringify(tokenUtxos, null, 2)}`)
+
+      return tokenUtxos
+    } catch (err) {
+      this.log(`Error in send-token.js/getTokenUtxos().`)
+      throw err
+    }
+  }
+
   // Generate the OP_RETURN script for an SLP Send transaction.
   // It's assumed all elements in the tokenUtxos array belong to the same token.
   generateOpReturn(tokenUtxos, sendQty) {
@@ -352,39 +373,6 @@ class SendTokens extends Command {
     }
   }
 
-  // Selects a UTXO from an array of UTXOs based on this optimization criteria:
-  // 1. The UTXO must be larger than or equal to the amount of BCH to send.
-  // 2. The UTXO should be as close to the amount of BCH as possible.
-  //    i.e. as small as possible
-  // Returns a single UTXO object.
-  selectUTXO(bch, utxos) {
-    let candidateUTXO = {}
-
-    const bchSatoshis = bch * 100000000
-    const total = bchSatoshis + 250 // Add 250 satoshis to cover TX fee.
-
-    //console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
-
-    // Loop through all the UTXOs.
-    for (var i = 0; i < utxos.length; i++) {
-      const thisUTXO = utxos[i]
-      // The UTXO must be greater than or equal to the send amount.
-      if (thisUTXO.satoshis >= total) {
-        // Automatically assign if the candidateUTXO is an empty object.
-        if (!candidateUTXO.satoshis) {
-          candidateUTXO = thisUTXO
-          continue
-
-          // Replace the candidate if the current UTXO is closer to the send amount.
-        } else if (candidateUTXO.satoshis > thisUTXO.satoshis) {
-          candidateUTXO = thisUTXO
-        }
-      }
-    }
-
-    return candidateUTXO
-  }
-
   // Validate the proper flags are passed in.
   validateFlags(flags) {
     //console.log(`flags: ${JSON.stringify(flags, null, 2)}`)
@@ -402,15 +390,17 @@ class SendTokens extends Command {
     if (!sendAddr || sendAddr === "")
       throw new Error(`You must specify a send-to address with the -a flag.`)
 
-    // // check Token Id should be hexademical chracters.
-    // let re = /^([A-Fa-f0-9]{2}){32,32}$/;
-    // if (typeof tokenIdHex !== 'string' || !re.test(tokenIdHex)) {
-    //     throw Error("TokenIdHex must be provided as a 64 character hex string.")
-    // }
-
     const tokenId = flags.tokenId
     if (!tokenId || tokenId === "")
       throw new Error(`You must specifcy the SLP token ID`)
+
+    // check Token Id should be hexademical chracters.
+    const re = /^([A-Fa-f0-9]{2}){32,32}$/
+    if (typeof tokenId !== "string" || !re.test(tokenId)) {
+      throw new Error(
+        "TokenIdHex must be provided as a 64 character hex string."
+      )
+    }
 
     return true
   }
