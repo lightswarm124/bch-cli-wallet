@@ -131,6 +131,7 @@ describe("Sweep", () => {
       }
 
       const result = await sweep.getBalance(flags)
+      //console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
       assert.isAbove(result, 0)
     })

@@ -98,7 +98,7 @@ class Send extends Command {
 
       const txid = await appUtils.broadcastTx(hex)
 
-      console.log(`TXID: ${txid}`)
+      appUtils.displayTxid(txid, walletInfo.network)
     } catch (err) {
       //if (err.message) console.log(err.message)
       //else console.log(`Error in .run: `, err)

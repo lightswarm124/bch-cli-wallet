@@ -70,10 +70,7 @@ class Sweep extends Command {
       const fromAddr = this.BITBOX.ECPair.toCashAddress(ecPair)
 
       // Get the UTXOs for that address.
-      let u
-      if (config.RESTAPI === "bitcoin.com")
-        u = await this.BITBOX.Address.utxo(fromAddr)
-      else u = await this.BITBOX.Insight.Address.utxo(fromAddr)
+      const u = await this.BITBOX.Address.utxo(fromAddr)
 
       const utxos = u.utxos
       //console.log(`utxos: ${JSON.stringify(u, null, 2)}`)
@@ -155,11 +152,8 @@ class Sweep extends Command {
 
       const fromAddr = this.BITBOX.ECPair.toCashAddress(ecPair)
 
-      // get BCH balance for the public address from rest.bitcoin.com.
-      let balances
-      if (config.RESTAPI === "bitcoin.com")
-        balances = await this.BITBOX.Address.details(fromAddr)
-      else balances = await this.BITBOX.Insight.Address.details(fromAddr)
+      // get BCH balance for the public address.
+      const balances = await this.BITBOX.Address.details(fromAddr)
 
       return balances.balance
     } catch (err) {

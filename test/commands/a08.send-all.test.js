@@ -84,6 +84,32 @@ describe("Send All", () => {
   })
 
   describe("#sendAllBCH", () => {
+    it("should throw an error for malformed UTXOs", async () => {
+      try {
+        const utxos = "badUtxo"
+        const sendToAddr = `bchtest:qzsfqeqtdk6plsvglccadkqtf0trf2nyz58090e6tt`
+
+        await sendAll.sendAllBCH(utxos, sendToAddr, mockedWallet)
+
+        assert.equal(true, false, "Unexpected result!")
+      } catch (err) {
+        assert.include(err.message, `utxos must be an array`)
+      }
+    })
+
+    it("should throw an error for empty array of UTXOs", async () => {
+      try {
+        const utxos = []
+        const sendToAddr = `bchtest:qzsfqeqtdk6plsvglccadkqtf0trf2nyz58090e6tt`
+
+        await sendAll.sendAllBCH(utxos, sendToAddr, mockedWallet)
+
+        assert.equal(true, false, "Unexpected result!")
+      } catch (err) {
+        assert.include(err.message, `No utxos found`)
+      }
+    })
+
     it("should send BCH on testnet", async () => {
       const utxos = [
         {

@@ -1,5 +1,7 @@
 /*
-  Generate a new HD wallet.
+  Creates a new HD wallet. Save the 12-word Mnemonic private key to a .json file.
+  https://developer.bitcoin.com/mastering-bitcoin-cash/3-keys-addresses-wallets/#mnemonic-code-words
+
 */
 
 "use strict"
@@ -39,7 +41,10 @@ class CreateWallet extends Command {
 
       this.createWallet(filename, flags.testnet)
     } catch (err) {
-      console.log(`Error: `, err)
+      if (err.message) console.log(err.message)
+      else console.log(`Error in create-wallet.js/run(): `, err)
+
+      //console.log(`Error: `, err)
     }
   }
 

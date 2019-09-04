@@ -29,6 +29,7 @@ class AppUtils {
 
   // Returns an array of UTXO objects. These objects contain the metadata needed
   // to optimize the selection of a UTXO for spending.
+  // Will discard (not return) UTXOs that belong to SLP tokens.
   async getUTXOs(walletInfo) {
     try {
       const retArray = []
@@ -38,10 +39,7 @@ class AppUtils {
         const thisAddr = walletInfo.hasBalance[i].cashAddress
 
         // Get the UTXOs for that address.
-        let u
-        if (config.RESTAPI === "bitcoin.com")
-          u = await this.BITBOX.Address.utxo(thisAddr)
-        else u = await this.BITBOX.Insight.Address.utxo(thisAddr)
+        const u = await this.BITBOX.Address.utxo(thisAddr)
         //console.log(`u for ${thisAddr}: ${JSON.stringify(u, null, 2)}`)
 
         const utxos = u.utxos
@@ -55,11 +53,33 @@ class AppUtils {
           // Add the HD node index to the UTXO for use later.
           thisUTXO.hdIndex = walletInfo.hasBalance[i].index
 
+          // Only check against SLP UTXOs, if hte SLPUtxos array exists.
+          if (walletInfo.SLPUtxos) {
+            // Determine if this UTXO is in the token UTXO list.
+            const isToken = walletInfo.SLPUtxos.filter(slpEntry => {
+              if (
+                slpEntry.txid === thisUTXO.txid &&
+                slpEntry.vout === thisUTXO.vout
+              )
+                return slpEntry
+            })
+            //console.log(`isToken: ${JSON.stringify(isToken, null, 2)}`)
+
+            // Discard this UTXO if it belongs to a token transaction.
+            if (isToken.length > 0) continue
+          }
+
           // Add the UTXO to the array if it has at least one confirmation.
-          if (thisUTXO.confirmations > 0) retArray.push(thisUTXO)
+          // Dev Note: Enable the line below if you want a more conservative
+          // approach of wanting a confirmation for each UTXO before spending
+          // it.
+          //if (thisUTXO.confirmations > 0) retArray.push(thisUTXO)
+          // zero-conf OK.
+          retArray.push(thisUTXO)
         }
       }
 
+      //console.log(`retArray: ${JSON.stringify(retArray, null, 2)}`)
       return retArray
     } catch (err) {
       console.log(`Error in getUTXOs.`, err)
@@ -136,6 +156,35 @@ class AppUtils {
       console.log(`Error in util.js/broadcastTx()`)
       throw err
     }
+  }
+
+  // Generates a link to the block explorer on the command line terminal.
+  // Expects a txid String as input, and the network value from the
+  // wallet file (testnet or mainnet).
+  displayTxid(txid, network) {
+    console.log(` `)
+    console.log(`TXID: ${txid}`)
+
+    if (network === "testnet") {
+      console.log(
+        `View on the block explorer: https://explorer.bitcoin.com/tbch/tx/${txid}`
+      )
+    } else {
+      console.log(
+        `View on the block explorer: https://explorer.bitcoin.com/bch/tx/${txid}`
+      )
+    }
+  }
+
+  // Takes a number and returns it, rounded to the nearest 8 decimal place.
+  eightDecimals(num) {
+    const thisNum = Number(num)
+
+    let tempNum = thisNum * 100000000
+    tempNum = Math.floor(tempNum)
+    tempNum = tempNum / 100000000
+
+    return tempNum
   }
 }
 

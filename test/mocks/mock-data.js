@@ -97,10 +97,75 @@ const mockUtxos = {
   scriptPubKey: "76a9142598520674f2476e6204dac86831f9461a53aae288ac"
 }
 
+const mockTokenUtxo = {
+  utxos: [
+    {
+      txid: "4588c219dd5842ddce3962d1dfe443b92337fa91d5314ee7792b9cd8dac32075",
+      vout: 1,
+      amount: 0.00000546,
+      satoshis: 546,
+      height: 597740,
+      confirmations: 604
+    }
+  ],
+  legacyAddress: "16qFZvK3t7hiXxPJh1wMHnmugzQHAVQgB3",
+  cashAddress: "bitcoincash:qqll3st8xl0k8cgv8dgrrrkntv6hqdn8huv3xm2ztf",
+  scriptPubKey: "76a9143ff8c16737df63e10c3b50318ed35b35703667bf88ac"
+}
+
+const mockTokenUtxoDetails = [
+  {
+    txid: "4588c219dd5842ddce3962d1dfe443b92337fa91d5314ee7792b9cd8dac32075",
+    vout: 1,
+    amount: 0.00000546,
+    satoshis: 546,
+    height: 597740,
+    confirmations: 604,
+    utxoType: "token",
+    tokenId: "3b3dbc418af179bfa9832255e9cc4e4bb7abacde8da62881f6eb466cbf70cc66",
+    tokenTicker: "p\u001f\r\u001e",
+    tokenName: "p\u001f\r\u001e",
+    tokenDocumentUrl: "",
+    tokenDocumentHash: "",
+    decimals: 0,
+    tokenQty: 61769
+  }
+]
+
+const mockFindSlpUtxos = [
+  {
+    txid: "4588c219dd5842ddce3962d1dfe443b92337fa91d5314ee7792b9cd8dac32075",
+    vout: 1,
+    amount: 0.00000546,
+    satoshis: 546,
+    height: 597740,
+    confirmations: 604,
+    cashAddr: "bitcoincash:qqll3st8xl0k8cgv8dgrrrkntv6hqdn8huv3xm2ztf",
+    slpAddr: "simpleledger:qqll3st8xl0k8cgv8dgrrrkntv6hqdn8huq2dqlz4h"
+  }
+]
+
+const mockBalancesForAddress = [
+  [
+    {
+      tokenId:
+        "3b3dbc418af179bfa9832255e9cc4e4bb7abacde8da62881f6eb466cbf70cc66",
+      balance: 61769,
+      balanceString: "61769",
+      slpAddress: "simpleledger:qqll3st8xl0k8cgv8dgrrrkntv6hqdn8huq2dqlz4h",
+      decimalCount: 0
+    }
+  ]
+]
+
 const updateBalancesMocks = {
   mockAddressDetails1,
   mockAddressDetails2,
-  mockUtxos
+  mockUtxos,
+  mockTokenUtxo,
+  mockTokenUtxoDetails,
+  mockFindSlpUtxos,
+  mockBalancesForAddress
 }
 
 module.exports = updateBalancesMocks
