@@ -47,6 +47,18 @@ async function makeNewWallet() {
 makeNewWallet()
 ```
 
+# Install Dev Environment
+While this npm library can be used globally, the intended audience is developers
+familiar with the usage of `npm` and `git`. Here is how to set up your own
+developer environment:
+
+- Clone this repo with `git clone`.
+- Install npm dependencies with `npm install`
+- Execute the commands like this: `./bin/run help`
+
+Running the wallet this way, you can edit the behavior of the wallet
+by making changes to the code in the [src/commands](src/commands) directory.
+
 # Command Line Usage
 <!-- usage -->
 ```sh-session
