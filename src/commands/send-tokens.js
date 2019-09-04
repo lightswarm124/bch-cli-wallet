@@ -43,6 +43,7 @@ class SendTokens extends Command {
     //_this = this
 
     this.BITBOX = BITBOX
+    this.appUtils = appUtils // Allows for easy mocking for unit tests.
   }
 
   async run() {
@@ -74,32 +75,22 @@ class SendTokens extends Command {
       const updateBalances = new UpdateBalances()
       updateBalances.BITBOX = this.BITBOX
       walletInfo = await updateBalances.updateBalances(filename, walletInfo)
-      console.log(`walletInfo: ${JSON.stringify(walletInfo, null, 2)}`)
+      //console.log(`walletInfo: ${JSON.stringify(walletInfo, null, 2)}`)
 
-      // Get a list of token UTXOs for this token.
-      // const tokenUtxos = walletInfo.SLPUtxos.filter(x => x.tokenId === tokenId)
-      // if (tokenUtxos.length === 0) {
-      //   this.log(`No tokens in the wallet matched the given token ID.`)
-      //   return
-      // }
-      // console.log(`tokenUtxos: ${JSON.stringify(tokenUtxos, null, 2)}`)
+      // Get a list of token UTXOs from the wallet for this token.
       const tokenUtxos = this.getTokenUtxos(tokenId, walletInfo)
 
-      // Get info on UTXOs controlled by this wallet.
-      const utxos = await appUtils.getUTXOs(walletInfo)
-      if (utxos.length === 0) {
-        this.log(
-          `No BCH UTXOs found in wallet. No way to pay miner fees for transaction.`
-        )
-        return
-      }
+      // Get a list of BCH UTXOs in this wallet that can be used to pay for
+      // the transaction fee.
+      const utxos = await this.getBchUtxos(walletInfo)
       //console.log(`send utxos: ${util.inspect(utxos)}`)
 
       // Select optimal UTXO
       // TODO: Figure out the appropriate amount of BCH to use in selectUTXO()
       const send = new Send()
       const utxo = await send.selectUTXO(0.000015, utxos)
-      console.log(`selected utxo: ${util.inspect(utxo)}`)
+      // 1500 satoshis used until a more accurate calculation can be devised.
+      //console.log(`selected utxo: ${util.inspect(utxo)}`)
 
       // Exit if there is no UTXO big enough to fulfill the transaction.
       if (!utxo.amount) {
@@ -113,7 +104,7 @@ class SendTokens extends Command {
       const getAddress = new GetAddress()
       getAddress.BITBOX = this.BITBOX
       const changeAddress = await getAddress.getAddress(filename)
-      console.log(`changeAddress: ${changeAddress}`)
+      //console.log(`changeAddress: ${changeAddress}`)
 
       // Send the token, transfer change to the new address
       const hex = await this.sendTokens(
@@ -126,7 +117,7 @@ class SendTokens extends Command {
       )
 
       const txid = await appUtils.broadcastTx(hex)
-      console.log(`TXID: ${txid}`)
+      appUtils.displayTxid(txid, walletInfo.network)
     } catch (err) {
       //if (err.message) console.log(err.message)
       //else console.log(`Error in .run: `, err)
@@ -134,7 +125,7 @@ class SendTokens extends Command {
     }
   }
 
-  // Generates the transaction in hex format, ready to broadcast to network.
+  // Generates the SLP transaction in hex format, ready to broadcast to network.
   async sendTokens(
     utxo,
     qty,
@@ -183,22 +174,8 @@ class SendTokens extends Command {
         throw new Error(`Selected UTXO does not have enough satoshis`)
       //console.log(`remainder: ${remainder}`)
 
-      // Debugging.
-      /*
-      console.log(
-        `Sending original UTXO amount of ${originalAmount} satoshis from address ${changeAddress}`
-      )
-      console.log(
-        `Sending ${satoshisToSend} satoshis to recieving address ${sendToAddr}`
-      )
-      console.log(
-        `Sending remainder amount of ${remainder} satoshis to new address ${changeAddress}`
-      )
-      console.log(`Paying a transaction fee of ${txFee} satoshis`)
-      */
-
       // Generate the OP_RETURN entry for an SLP SEND transaction.
-      console.log(`Generating op-return.`)
+      //console.log(`Generating op-return.`)
       const { script, outputs } = this.generateOpReturn(tokenUtxos, qty)
       //console.log(`script: ${JSON.stringify(script, null, 2)}`)
 
@@ -255,10 +232,7 @@ class SendTokens extends Command {
           walletInfo,
           thisUtxo.hdIndex
         )
-        //console.log(`slpChangeAddr: ${JSON.stringify(slpChangeAddr, null, 2)}`)
-        console.log(
-          `slpChangeAddr: ${this.BITBOX.HDNode.toCashAddress(slpChangeAddr)}`
-        )
+
         const slpKeyPair = this.BITBOX.HDNode.toKeyPair(slpChangeAddr)
         //console.log(`slpKeyPair: ${JSON.stringify(slpKeyPair, null, 2)}`)
 
@@ -276,8 +250,8 @@ class SendTokens extends Command {
 
       // output rawhex
       const hex = tx.toHex()
-      console.log(`Transaction raw hex: `)
-      console.log(hex)
+      //console.log(`Transaction raw hex: `)
+      //console.log(hex)
 
       return hex
     } catch (err) {
@@ -295,11 +269,29 @@ class SendTokens extends Command {
         throw new Error(`No tokens in the wallet matched the given token ID.`)
 
       // For debugging:
-      console.log(`tokenUtxos: ${JSON.stringify(tokenUtxos, null, 2)}`)
+      //console.log(`tokenUtxos: ${JSON.stringify(tokenUtxos, null, 2)}`)
 
       return tokenUtxos
     } catch (err) {
       this.log(`Error in send-token.js/getTokenUtxos().`)
+      throw err
+    }
+  }
+
+  // A wrapper for the util library getUTXOs() call. Throws an error if there
+  // are no BCH UTXOs to pay for the SLP transaction miner fees.
+  async getBchUtxos(walletInfo) {
+    try {
+      const utxos = await this.appUtils.getUTXOs(walletInfo)
+      if (utxos.length === 0) {
+        throw new Error(
+          `No BCH UTXOs found in wallet. No way to pay miner fees for transaction.`
+        )
+      }
+
+      return utxos
+    } catch (err) {
+      this.log(`Error in send-tokens.js/getBchUtxos().`)
       throw err
     }
   }

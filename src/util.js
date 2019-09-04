@@ -158,6 +158,24 @@ class AppUtils {
     }
   }
 
+  // Generates a link to the block explorer on the command line terminal.
+  // Expects a txid String as input, and the network value from the
+  // wallet file (testnet or mainnet).
+  displayTxid(txid, network) {
+    console.log(` `)
+    console.log(`TXID: ${txid}`)
+
+    if (network === "testnet") {
+      console.log(
+        `View on the block explorer: https://explorer.bitcoin.com/tbch/tx/${txid}`
+      )
+    } else {
+      console.log(
+        `View on the block explorer: https://explorer.bitcoin.com/bch/tx/${txid}`
+      )
+    }
+  }
+
   // Takes a number and returns it, rounded to the nearest 8 decimal place.
   eightDecimals(num) {
     const thisNum = Number(num)
