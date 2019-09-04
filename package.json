@@ -31,7 +31,7 @@
     "eslint-plugin-prettier": "^3.0.0",
     "globby": "^10.0.0",
     "mocha": "^6.1.4",
-    "nock": "^10.0.3",
+    "nock": "^11.1.0",
     "nyc": "^14.1.1",
     "semantic-release": "^15.13.15",
     "sinon": "^7.0.0"
