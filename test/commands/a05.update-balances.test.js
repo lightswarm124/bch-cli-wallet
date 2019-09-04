@@ -64,7 +64,7 @@ describe("#update-balances.js", () => {
       assert.equal(addr.length, 1)
       assert.equal(
         addr[0],
-        "bchtest:qq4sx72yfuhqryzm9h23zez27n6n24hdavvfqn2ma3"
+        "bchtest:qqk96ucdlkrgpyjmwh29pqu2hffs9zy97vcdyew059"
       )
     })
 
