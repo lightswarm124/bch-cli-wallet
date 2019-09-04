@@ -72,6 +72,7 @@ USAGE
 * [`bch-cli-wallet remove-wallet`](#bch-cli-wallet-remove-wallet)
 * [`bch-cli-wallet send`](#bch-cli-wallet-send)
 * [`bch-cli-wallet send-all`](#bch-cli-wallet-send-all)
+* [`bch-cli-wallet send-tokens`](#bch-cli-wallet-send-tokens)
 * [`bch-cli-wallet sweep`](#bch-cli-wallet-sweep)
 * [`bch-cli-wallet update-balances`](#bch-cli-wallet-update-balances)
 
@@ -100,6 +101,7 @@ USAGE
 
 OPTIONS
   -n, --name=name  Name of wallet
+  -t, --token      Generate a simpledger: token address
 ```
 
 _See code: [src/commands/get-address.js](https://github.com/Bitcoin-com/bch-cli-wallet/blob/v1.3.1/src/commands/get-address.js)_
@@ -207,7 +209,8 @@ OPTIONS
   -n, --name=name          Name of wallet
 
 DESCRIPTION
-  Send all BCH in a wallet to another address. **Degrades Privacy**
+  Send all BCH in a wallet to another address.
+
   This method has a negative impact on privacy by linking all addresses in a
   wallet. If privacy of a concern, CoinJoin should be used.
   This is a good article describing the privacy concerns:
@@ -215,6 +218,23 @@ DESCRIPTION
 ```
 
 _See code: [src/commands/send-all.js](https://github.com/Bitcoin-com/bch-cli-wallet/blob/v1.3.1/src/commands/send-all.js)_
+
+## `bch-cli-wallet send-tokens`
+
+Send SLP tokens.
+
+```
+USAGE
+  $ bch-cli-wallet send-tokens
+
+OPTIONS
+  -a, --sendAddr=sendAddr  Cash or SimpleLedger address to send to
+  -n, --name=name          Name of wallet
+  -q, --qty=qty
+  -t, --tokenId=tokenId    Token ID
+```
+
+_See code: [src/commands/send-tokens.js](https://github.com/Bitcoin-com/bch-cli-wallet/blob/v1.3.1/src/commands/send-tokens.js)_
 
 ## `bch-cli-wallet sweep`
 
