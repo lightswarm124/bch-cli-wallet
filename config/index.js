@@ -32,11 +32,7 @@ if (RESTAPI === "bitcoin.com") {
 if (RESTAPI === "rest.bitcoin.com") {
   config.BCHLIB = BCHJS.BitboxShim()
   config.MAINNET_REST = `https://rest.bitcoin.com/v2/`
-  //config.TESTNET_REST = `https://trest.bitcoin.com/v2/`
-
-  // Use Decatur's infrastructure until rest.bitcoin.com changes their Insight API.
-  config.TESTNET_REST = `http://decatur.hopto.org:13400/v3/`
-
+  config.TESTNET_REST = `http://157.245.141.224:3000/v2/`
   config.RESTAPI = "rest.bitcoin.com"
 }
 
