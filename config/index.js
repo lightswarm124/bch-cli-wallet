@@ -13,7 +13,11 @@
 let RESTAPI = "rest.bitcoin.com"
 
 // Override the RESTAPI setting if envronment variable is set.
-if (process.env.RESTAPI) RESTAPI = process.env.RESTAPI
+if (process.env.RESTAPI && process.env.RESTAPI !== "")
+  RESTAPI = process.env.RESTAPI
+
+// Ensure bch-js can pick up the env var.
+process.env.RESTAPI = RESTAPI
 
 const BCHJS = require("@chris.troutner/bch-js")
 const BITBOX = require("slp-sdk")
