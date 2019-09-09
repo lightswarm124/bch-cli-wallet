@@ -15,17 +15,24 @@
   -Loop through each input and sign
   -Build the transaction
   -Broadcast the transaction
+
+  Note: This will not send any tokens. If you run this before running
+  send-all-tokens, the wallet will not have enough BCH to send the tokens.
+
+  TO-DO: once sending tokens is implemented, this command should send all
+  tokens first, then send BCH.
 */
 
 "use strict"
 
-const BB = require("bitbox-sdk").BITBOX
-const BITBOX = new BB({ restURL: "https://rest.bitcoin.com/v2/" })
-
 const UpdateBalances = require("./update-balances")
+const config = require("../../config")
 
 const AppUtils = require("../util")
 const appUtils = new AppUtils()
+
+// Mainnet by default
+const BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
 
 // Used for debugging and error reporting.
 const util = require("util")
@@ -60,7 +67,7 @@ class SendAll extends Command {
 
       // Determine if this is a testnet wallet or a mainnet wallet.
       if (walletInfo.network === "testnet") {
-        this.BITBOX = new BB({ restURL: "https://trest.bitcoin.com/v2/" })
+        this.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
         appUtils.BITBOX = this.BITBOX
       }
 
@@ -79,6 +86,12 @@ class SendAll extends Command {
       const txid = await appUtils.broadcastTx(hex)
 
       console.log(`TXID: ${txid}`)
+
+      // Display link to block explorer.
+      console.log(`View on block explorer:`)
+      if (walletInfo.network === "testnet")
+        console.log(`https://explorer.bitcoin.com/tbch/tx/${txid}`)
+      else console.log(`https://explorer.bitcoin.com/bch/tx/${txid}`)
     } catch (err) {
       //if (err.message) console.log(err.message)
       //else console.log(`Error in .run: `, err)
@@ -89,14 +102,17 @@ class SendAll extends Command {
   // Sends all BCH in a wallet to a new address.
   async sendAllBCH(utxos, sendToAddr, walletInfo) {
     try {
-      //console.log(`utxos: ${util.inspect(utxos)}`)
+      //console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
 
-      if (!Array.isArray(utxos)) throw new Error(`utxos must be an array`)
+      if (!Array.isArray(utxos)) throw new Error(`utxos must be an array.`)
+
+      if (utxos.length === 0) throw new Error(`No utxos found.`)
 
       // instance of transaction builder
+      let transactionBuilder
       if (walletInfo.network === `testnet`)
-        var transactionBuilder = new this.BITBOX.TransactionBuilder("testnet")
-      else var transactionBuilder = new this.BITBOX.TransactionBuilder()
+        transactionBuilder = new this.BITBOX.TransactionBuilder("testnet")
+      else transactionBuilder = new this.BITBOX.TransactionBuilder()
 
       let originalAmount = 0
 
@@ -141,7 +157,10 @@ class SendAll extends Command {
         const utxo = utxos[i]
 
         // Generate a keypair for the current address.
-        const change = appUtils.changeAddrFromMnemonic(walletInfo, utxo.hdIndex)
+        const change = await appUtils.changeAddrFromMnemonic(
+          walletInfo,
+          utxo.hdIndex
+        )
         const keyPair = this.BITBOX.HDNode.toKeyPair(change)
 
         transactionBuilder.sign(
@@ -182,8 +201,9 @@ class SendAll extends Command {
   }
 }
 
-SendAll.description = `
-Send all BCH in a wallet to another address. **Degrades Privacy**
+SendAll.description = `Send all BCH in a wallet to another address. **Degrades Privacy**
+Send all BCH in a wallet to another address.
+
 This method has a negative impact on privacy by linking all addresses in a
 wallet. If privacy of a concern, CoinJoin should be used.
 This is a good article describing the privacy concerns:

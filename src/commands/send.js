@@ -14,14 +14,15 @@
 
 "use strict"
 
-const BB = require("bitbox-sdk").BITBOX
-const BITBOX = new BB({ restURL: "https://rest.bitcoin.com/v2/" })
-
 const GetAddress = require("./get-address")
 const UpdateBalances = require("./update-balances")
+const config = require("../../config")
 
 const AppUtils = require("../util")
 const appUtils = new AppUtils()
+
+// Mainnet by default
+const BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
 
 // Used for debugging and error reporting.
 const util = require("util")
@@ -57,7 +58,7 @@ class Send extends Command {
 
       // Determine if this is a testnet wallet or a mainnet wallet.
       if (walletInfo.network === "testnet") {
-        this.BITBOX = new BB({ restURL: "https://trest.bitcoin.com/v2/" })
+        this.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
         appUtils.BITBOX = this.BITBOX
       }
 
@@ -97,7 +98,7 @@ class Send extends Command {
 
       const txid = await appUtils.broadcastTx(hex)
 
-      console.log(`TXID: ${txid}`)
+      appUtils.displayTxid(txid, walletInfo.network)
     } catch (err) {
       //if (err.message) console.log(err.message)
       //else console.log(`Error in .run: `, err)
@@ -111,9 +112,10 @@ class Send extends Command {
       //console.log(`utxo: ${util.inspect(utxo)}`)
 
       // instance of transaction builder
+      let transactionBuilder
       if (walletInfo.network === `testnet`)
-        var transactionBuilder = new this.BITBOX.TransactionBuilder("testnet")
-      else var transactionBuilder = new this.BITBOX.TransactionBuilder()
+        transactionBuilder = new this.BITBOX.TransactionBuilder("testnet")
+      else transactionBuilder = new this.BITBOX.TransactionBuilder()
 
       const satoshisToSend = Math.floor(bch * 100000000)
       //console.log(`Amount to send in satoshis: ${satoshisToSend}`)
@@ -164,7 +166,10 @@ class Send extends Command {
       )
 
       // Generate a keypair from the change address.
-      const change = appUtils.changeAddrFromMnemonic(walletInfo, utxo.hdIndex)
+      const change = await appUtils.changeAddrFromMnemonic(
+        walletInfo,
+        utxo.hdIndex
+      )
       //console.log(`change: ${JSON.stringify(change, null, 2)}`)
       const keyPair = this.BITBOX.HDNode.toKeyPair(change)
 

@@ -1,10 +1,18 @@
+/*
+  Creates a new HD wallet. Save the 12-word Mnemonic private key to a .json file.
+  https://developer.bitcoin.com/mastering-bitcoin-cash/3-keys-addresses-wallets/#mnemonic-code-words
+
+*/
+
 "use strict"
 
 const AppUtils = require("../util")
 const appUtils = new AppUtils()
 
-const BB = require("bitbox-sdk").BITBOX
-const BITBOX = new BB({ restURL: "https://rest.bitcoin.com/v2/" })
+const config = require("../../config")
+
+// Mainnet by default
+const BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
 
 const { Command, flags } = require("@oclif/command")
 
@@ -27,13 +35,16 @@ class CreateWallet extends Command {
 
       // Determine if this is a testnet wallet or a mainnet wallet.
       if (flags.testnet)
-        this.BITBOX = new BB({ restURL: "https://trest.bitcoin.com/v2/" })
+        this.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
 
       const filename = `${__dirname}/../../wallets/${flags.name}.json`
 
       this.createWallet(filename, flags.testnet)
     } catch (err) {
-      console.log(`Error: `, err)
+      if (err.message) console.log(err.message)
+      else console.log(`Error in create-wallet.js/run(): `, err)
+
+      //console.log(`Error: `, err)
     }
   }
 
@@ -55,17 +66,20 @@ class CreateWallet extends Command {
       walletData.mnemonic = mnemonic
 
       // root seed buffer
-      const rootSeed = this.BITBOX.Mnemonic.toSeed(mnemonic)
+      let rootSeed
+      if (config.RESTAPI === "bitcoin.com")
+        rootSeed = this.BITBOX.Mnemonic.toSeed(mnemonic)
+      else rootSeed = await this.BITBOX.Mnemonic.toSeed(mnemonic)
 
       // master HDNode
+      let masterHDNode = this.BITBOX.HDNode.fromSeed(rootSeed)
       if (testnet)
-        var masterHDNode = this.BITBOX.HDNode.fromSeed(rootSeed, "testnet")
-      else var masterHDNode = this.BITBOX.HDNode.fromSeed(rootSeed)
+        masterHDNode = this.BITBOX.HDNode.fromSeed(rootSeed, "testnet")
 
       // HDNode of BIP44 account
       const account = this.BITBOX.HDNode.derivePath(
         masterHDNode,
-        "m/44'/145'/0'"
+        "m/44'/245'/0'"
       )
 
       // derive the first external change address HDNode which is going to spend utxo

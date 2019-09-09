@@ -10,8 +10,10 @@
 const AppUtils = require("../util")
 const appUtils = new AppUtils()
 
-const BB = require("bitbox-sdk").BITBOX
-const BITBOX = new BB({ restURL: "https://rest.bitcoin.com/v2/" })
+const config = require("../../config")
+
+// Mainnet by default.
+const BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
 
 const axios = require("axios")
 

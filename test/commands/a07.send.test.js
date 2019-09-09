@@ -11,9 +11,7 @@ const sinon = require("sinon")
 
 // Library under test.
 const Send = require("../../src/commands/send")
-
-const BB = require("bitbox-sdk")
-const REST_URL = { restURL: "https://trest.bitcoin.com/v2/" }
+const config = require("../../config")
 
 // Mock data
 const testwallet = require("../mocks/testwallet.json")
