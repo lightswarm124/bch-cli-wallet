@@ -48,7 +48,7 @@ class TradeInfo extends Command {
         this.BITBOX = new BB({ restURL: "https://trest.bitcoin.com/v2/" })
 
       const tradeInfo = await this.fetchPair()
-      console.log(`BCH price: $${tradeInfo.rate}`)
+      console.log(`BCH price when converting to USDH: $${tradeInfo.rate}`)
       console.log(`Minimum trade quantity: ${tradeInfo.min} BCH`)
       console.log(`Maximum trade quantity: ${tradeInfo.max} BCH`)
       console.log(" ")
@@ -63,6 +63,16 @@ class TradeInfo extends Command {
       const avg = (Number(usdBch) + Number(bbPrice)) / 2
       console.log(`Average price: $${avg}`)
       console.log(" ")
+
+      // Calculate percentage loss when converting to USDH
+      const delta = avg - tradeInfo.rate
+      console.log(`Price difference: $${appUtils.twoDecimals(delta)}`)
+      const roi = (delta / avg) * 100
+      console.log(
+        `Commission paid for conversion: ${appUtils.twoDecimals(roi)}%`
+      )
+
+      await this.generateQuote()
     } catch (err) {
       if (err.message) console.log(err.message)
       else console.log(`Error in UpdateBalances.run: `, err)
@@ -125,6 +135,32 @@ class TradeInfo extends Command {
       return body.data
     } catch (err) {
       console.error(`Error in trade-info.js/getCoinbasePrice()`)
+      throw err
+    }
+  }
+
+  async generateQuote() {
+    try {
+      const body = await axios({
+        url: `https://sideshift.ai/api/quotes`,
+        method: "post",
+        responseType: "json",
+        headers: { "content-type": "application/json" },
+        data: {
+          depositMethodId: "bch",
+          settleMethodId: "usdh",
+          settleAddress:
+            "bitcoincash:qp3pxtckcxyq5tfnacnf5cyuj9wl7qgwk5ltk82yny",
+          //  "simpleledger:qr58zuj7zy0mcsrpj0r3lkyckze85tk0lu04h94nx7",
+          testerId: "96d02f617d16e111"
+        }
+      })
+
+      console.log(`body.data: ${JSON.stringify(body.data, null, 2)}`)
+
+      return body.data
+    } catch (err) {
+      console.error(`Error in trade-info.js/generateQuote():`, err)
       throw err
     }
   }
