@@ -124,8 +124,8 @@ class UpdateBalances extends Command {
           addressData = addressData.concat(thisDataBatch.balances)
           slpUtxoData = slpUtxoData.concat(thisDataBatch.slpUtxos)
         }
-
         //console.log(`addressData: ${util.inspect(addressData)}`)
+        //console.log(`slpUtxoData: ${JSON.stringify(slpUtxoData, null, 2)}`)
 
         // Protect against run-away while loop.
         if (currentIndex > 10000) break
@@ -243,6 +243,18 @@ class UpdateBalances extends Command {
         if (x.length > 0) return x
       })
 
+      // TODO: combine data from consolidatedBalances with the UTXO data.
+      // This paragraph displays token information for now.
+      if (consolidatedBalances.length > 0) {
+        console.log(
+          `consolidatedBalances: ${JSON.stringify(
+            consolidatedBalances,
+            null,
+            2
+          )}`
+        )
+      }
+
       // Loop through each address that has SLP tokens.
       let slpUtxos = []
       for (let i = 0; i < consolidatedBalances.length; i++) {
@@ -251,7 +263,10 @@ class UpdateBalances extends Command {
 
         // Get all SLP token UTXOs associated with this address.
         const tokenUtxos = await this.findSlpUtxos(thisAddress)
-        //console.log(`tokenUtxos: ${JSON.stringify(tokenUtxos, null, 2)}`)
+        // console.log(`tokenUtxos: ${JSON.stringify(tokenUtxos, null, 2)}`)
+
+        // Combine token data.
+        //tokenUtxos
 
         // Merge any new UTXOs in with the list.
         slpUtxos = slpUtxos.concat(tokenUtxos)
@@ -279,11 +294,11 @@ class UpdateBalances extends Command {
       //console.log(`u = ${JSON.stringify(u, null, 2)}`)
 
       const utxos = u.utxos
-      //console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
+      console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
 
       // Figure out which UTXOs are associated with SLP tokens.
       const isTokenUtxo = await this.BITBOX.Util.tokenUtxoDetails(utxos)
-      //console.log(`isTokenUtxo: ${JSON.stringify(isTokenUtxo, null, 2)}`)
+      console.log(`isTokenUtxo: ${JSON.stringify(isTokenUtxo, null, 2)}`)
 
       // Filter out just the UTXOs that belong to SLP tokens.
       const tokenUtxos = []
