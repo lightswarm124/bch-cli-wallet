@@ -243,18 +243,6 @@ class UpdateBalances extends Command {
         if (x.length > 0) return x
       })
 
-      // TODO: combine data from consolidatedBalances with the UTXO data.
-      // This paragraph displays token information for now.
-      if (consolidatedBalances.length > 0) {
-        console.log(
-          `consolidatedBalances: ${JSON.stringify(
-            consolidatedBalances,
-            null,
-            2
-          )}`
-        )
-      }
-
       // Loop through each address that has SLP tokens.
       let slpUtxos = []
       for (let i = 0; i < consolidatedBalances.length; i++) {
@@ -294,11 +282,11 @@ class UpdateBalances extends Command {
       //console.log(`u = ${JSON.stringify(u, null, 2)}`)
 
       const utxos = u.utxos
-      console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
+      // console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
 
       // Figure out which UTXOs are associated with SLP tokens.
       const isTokenUtxo = await this.BITBOX.Util.tokenUtxoDetails(utxos)
-      console.log(`isTokenUtxo: ${JSON.stringify(isTokenUtxo, null, 2)}`)
+      // console.log(`isTokenUtxo: ${JSON.stringify(isTokenUtxo, null, 2)}`)
 
       // Filter out just the UTXOs that belong to SLP tokens.
       const tokenUtxos = []
