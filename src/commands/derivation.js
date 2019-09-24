@@ -26,7 +26,15 @@ class Derivation extends Command {
       console.log(`Current derivation path: ${walletData.derivation}`)
 
       // Save a new derivation.
-      if (flags.save) this.saveDerivation(flags, filename, walletData)
+      if (flags.save) {
+        const result = this.saveDerivation(flags, filename, walletData)
+
+        if (result) {
+          console.log(
+            `New derivation path of ${flags.save} saved to wallet file.`
+          )
+        }
+      }
     } catch (err) {
       //if (err.message) console.log(err.message)
       //else console.log(`Error in .run: `, err)
@@ -34,6 +42,7 @@ class Derivation extends Command {
     }
   }
 
+  // Update the wallet file with the new derivation path.
   saveDerivation(flags, filename, walletData) {
     try {
       // Set the new derivation path.
@@ -42,7 +51,7 @@ class Derivation extends Command {
       // Save the wallet.
       appUtils.saveWallet(filename, walletData)
 
-      console.log(`New derivation path of ${flags.save} saved to wallet file.`)
+      return true
     } catch (err) {
       console.log(`Error in derivation.js/saveDerivation()`)
       throw err
