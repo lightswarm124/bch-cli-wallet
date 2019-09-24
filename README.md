@@ -79,6 +79,7 @@ USAGE
 # Commands
 <!-- commands -->
 * [`slp-cli-wallet create-wallet`](#slp-cli-wallet-create-wallet)
+* [`slp-cli-wallet derivation`](#slp-cli-wallet-derivation)
 * [`slp-cli-wallet get-address`](#slp-cli-wallet-get-address)
 * [`slp-cli-wallet get-key`](#slp-cli-wallet-get-key)
 * [`slp-cli-wallet hello`](#slp-cli-wallet-hello)
@@ -105,6 +106,32 @@ OPTIONS
 ```
 
 _See code: [src/commands/create-wallet.js](https://github.com/christroutner/bch-cli-wallet/blob/v1.5.0/src/commands/create-wallet.js)_
+
+## `slp-cli-wallet derivation`
+
+Display or set the derivation path used by the wallet.
+
+```
+USAGE
+  $ slp-cli-wallet derivation
+
+OPTIONS
+  -n, --name=name  name to print
+  -s, --save=save  save a new derivation path
+
+DESCRIPTION
+  This command is used to display the derivation path used by the wallet. The -s
+  flag can be used to save a new derivation path.
+
+  Common derivation paths used:
+  145 - BIP44 standard path for Bitcoin Cash
+  245 - BIP44 standard path for SLP tokens
+  0 - Used by common software like the Bitcoin.com wallet and Honest.cash
+
+  Wallets use the 245 derivation path by default.
+```
+
+_See code: [src/commands/derivation.js](https://github.com/christroutner/bch-cli-wallet/blob/v1.5.0/src/commands/derivation.js)_
 
 ## `slp-cli-wallet get-address`
 
