@@ -1,12 +1,12 @@
 {
-  "name": "bch-cli-wallet",
-  "description": "A command line wallet for Bitcoin Cash, built with BITBOX",
+  "name": "slp-cli-wallet",
+  "description": "A command line wallet for Bitcoin Cash and SLP tokens, built with BITBOX",
   "version": "1.5.0",
   "author": "Chris Troutner @christroutner",
   "bin": {
     "bch-cli-wallet": "./bin/run"
   },
-  "bugs": "https://github.com/Bitcoin-com/bch-cli-wallet",
+  "bugs": "https://github.com/christroutner/bch-cli-wallet/issues",
   "dependencies": {
     "@chris.troutner/bch-js": "^1.4.20",
     "@oclif/command": "^1.5.4",
@@ -47,7 +47,7 @@
     "/src",
     "/wallets"
   ],
-  "homepage": "https://github.com/Bitcoin-com/bch-cli-wallet",
+  "homepage": "https://github.com/christroutner/bch-cli-wallet",
   "keywords": [
     "oclif"
   ],
@@ -55,12 +55,12 @@
   "main": "src/index.js",
   "oclif": {
     "commands": "./src/commands",
-    "bin": "bch-cli-wallet",
+    "bin": "slp-cli-wallet",
     "plugins": [
       "@oclif/plugin-help"
     ]
   },
-  "repository": "Bitcoin-com/bch-cli-wallet",
+  "repository": "christroutner/bch-cli-wallet",
   "scripts": {
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "oclif-dev manifest && oclif-dev readme",
