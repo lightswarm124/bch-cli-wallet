@@ -44,6 +44,7 @@ describe("create-wallet", () => {
     const filename = `${__dirname}/../../wallets/test123.json`
 
     const walletData = await createWallet.createWallet(filename, undefined)
+    // console.log(`walletData: ${JSON.stringify(walletData, null, 2)}`)
 
     assert.equal(walletData.network, "mainnet", "Expecting mainnet address")
     assert.hasAllKeys(walletData, [
@@ -52,7 +53,8 @@ describe("create-wallet", () => {
       "balance",
       "nextAddress",
       "hasBalance",
-      "rootAddress"
+      "rootAddress",
+      "derivation"
     ])
 
     // hasBalance is an array of objects. Each object represents an address with
@@ -80,7 +82,8 @@ describe("create-wallet", () => {
       "balance",
       "nextAddress",
       "hasBalance",
-      "rootAddress"
+      "rootAddress",
+      "derivation"
     ])
 
     // hasBalance is an array of objects. Each object represents an address with
@@ -108,7 +111,8 @@ describe("create-wallet", () => {
       "balance",
       "nextAddress",
       "hasBalance",
-      "rootAddress"
+      "rootAddress",
+      "derivation"
     ])
 
     // hasBalance is an array of objects. Each object represents an address with
