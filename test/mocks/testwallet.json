@@ -4,6 +4,7 @@
   "rootAddress": "bchtest:qqfzejzg9647tadnlemes6kjjmd948ne25jx6el90r",
   "balance": 0.09999751999999999,
   "nextAddress": 4,
+  "derivation": 245,
   "hasBalance": [
     {
       "index": 2,
