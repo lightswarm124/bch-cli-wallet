@@ -86,7 +86,10 @@ class GetAddress extends Command {
     else masterHDNode = this.BITBOX.HDNode.fromSeed(rootSeed)
 
     // HDNode of BIP44 account
-    const account = this.BITBOX.HDNode.derivePath(masterHDNode, "m/44'/245'/0'")
+    const account = this.BITBOX.HDNode.derivePath(
+      masterHDNode,
+      `m/44'/${walletInfo.derivation}'/0'`
+    )
     //console.log(`account: ${util.inspect(account)}`)
 
     // derive an external change address HDNode
