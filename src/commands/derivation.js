@@ -36,9 +36,9 @@ class Derivation extends Command {
         }
       }
     } catch (err) {
-      //if (err.message) console.log(err.message)
-      //else console.log(`Error in .run: `, err)
-      console.log(`Error in derivation.js/run: `, err)
+      if (err.message) console.log(err.message)
+      else console.log(`Error in .run: `, err)
+      //console.log(`Error in derivation.js/run: `, err)
     }
   }
 
