@@ -76,10 +76,13 @@ class CreateWallet extends Command {
       if (testnet)
         masterHDNode = this.BITBOX.HDNode.fromSeed(rootSeed, "testnet")
 
+      // Use the 245 derivation path by default.
+      walletData.derivation = 245
+
       // HDNode of BIP44 account
       const account = this.BITBOX.HDNode.derivePath(
         masterHDNode,
-        "m/44'/245'/0'"
+        `m/44'/${walletData.derivation}'/0'`
       )
 
       // derive the first external change address HDNode which is going to spend utxo
@@ -92,7 +95,6 @@ class CreateWallet extends Command {
       walletData.balance = 0
       walletData.nextAddress = 1
       walletData.hasBalance = []
-      walletData.derivation = 245
 
       // Write out the basic information into a json file for other apps to use.
       //const filename = `${__dirname}/../../wallets/${name}.json`
