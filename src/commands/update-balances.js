@@ -51,7 +51,7 @@ class UpdateBalances extends Command {
 
       console.log(`Updated balance: ${walletInfo.balance} BCH`)
     } catch (err) {
-      //if (err.message) console.log(err.message)
+      if (err.message) console.log(err.message)
       console.log(`Error in UpdateBalances.run: `, err)
     }
   }
