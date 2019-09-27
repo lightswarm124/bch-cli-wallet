@@ -18,6 +18,8 @@ const BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
 const util = require("util")
 util.inspect.defaultOptions = { depth: 2 }
 
+const SATS_PER_BCH = 100000000
+
 const { Command, flags } = require("@oclif/command")
 
 class UpdateBalances extends Command {
@@ -177,7 +179,10 @@ class UpdateBalances extends Command {
         const thisAddr = dataBatch[i]
 
         // Exit if a balance is detected in any of the addresses.
-        if (thisAddr.totalReceivedSat > 0 || thisAddr.unconfirmedBalanceSat > 0)
+        if (
+          Number(thisAddr.balance) > 0 ||
+          Number(thisAddr.unconfirmedBalance) > 0
+        )
           return true
       }
 
@@ -211,7 +216,9 @@ class UpdateBalances extends Command {
       //console.log(`addresses: ${util.inspect(addresses)}`)
 
       // get BCH balance and details for each address.
-      const balances = await this.BITBOX.Address.details(addresses)
+      // const balances = await this.BITBOX.Address.details(addresses)
+      const balances = await this.BITBOX.Blockbook.balance(addresses)
+      // console.log(`balances: ${JSON.stringify(balances, null, 2)}`)
 
       // get SLP utxo information for the addresses
       const slpUtxos = await this.getSlpUtxos(addresses)
@@ -357,14 +364,21 @@ class UpdateBalances extends Command {
       const thisAddr = addressData[i]
 
       // If the address has a balance, add it to the hasBalance array.
-      if (thisAddr.balance > 0 || thisAddr.unconfirmedBalance > 0) {
+      if (
+        Number(thisAddr.balance) > 0 ||
+        Number(thisAddr.unconfirmedBalance) > 0
+      ) {
         const thisObj = {
           index: i,
-          balance: thisAddr.balance,
-          balanceSat: thisAddr.balanceSat,
-          unconfirmedBalance: thisAddr.unconfirmedBalance,
-          unconfirmedBalanceSat: thisAddr.unconfirmedBalanceSat,
-          cashAddress: thisAddr.cashAddress
+          balance: appUtils.eightDecimals(
+            Number(thisAddr.balance) / SATS_PER_BCH
+          ),
+          balanceSat: Number(thisAddr.balance),
+          unconfirmedBalance: appUtils.eightDecimals(
+            Number(thisAddr.unconfirmedBalance) / SATS_PER_BCH
+          ),
+          unconfirmedBalanceSat: Number(thisAddr.unconfirmedBalance),
+          cashAddress: thisAddr.address
         }
 
         hasBalance.push(thisObj)
@@ -389,18 +403,15 @@ class UpdateBalances extends Command {
       totalUnconfirmed += thisHasBalance.unconfirmedBalance
     }
 
-    // The amount of satoshis in one coin.
-    const ONE_COIN = 100000000
-
     // Convert to satoshis
-    const totalSatoshis = Math.floor(total * ONE_COIN)
-    const totalConfirmedSatoshis = Math.floor(totalConfirmed * ONE_COIN)
-    const totalUnconfirmedSatoshis = Math.floor(totalUnconfirmed * ONE_COIN)
+    const totalSatoshis = Math.floor(total * SATS_PER_BCH)
+    const totalConfirmedSatoshis = Math.floor(totalConfirmed * SATS_PER_BCH)
+    const totalUnconfirmedSatoshis = Math.floor(totalUnconfirmed * SATS_PER_BCH)
 
     // Convert back to BCH
-    total = totalSatoshis / ONE_COIN
-    totalConfirmed = totalConfirmedSatoshis / ONE_COIN
-    totalUnconfirmed = totalUnconfirmedSatoshis / ONE_COIN
+    total = totalSatoshis / SATS_PER_BCH
+    totalConfirmed = totalConfirmedSatoshis / SATS_PER_BCH
+    totalUnconfirmed = totalUnconfirmedSatoshis / SATS_PER_BCH
 
     if (verbose) return { totalConfirmed, totalUnconfirmed }
 

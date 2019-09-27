@@ -26,7 +26,7 @@ const BITBOX = require("slp-sdk")
 const config = {}
 
 if (RESTAPI === "bchjs") {
-  config.BCHLIB = BCHJS
+  config.BCHLIB = BCHJS.BitboxShim()
   config.MAINNET_REST = `https://mainnet.bchjs.cash/v3/`
   config.TESTNET_REST = `https://testnet.bchjs.cash/v3/`
   config.RESTAPI = "bchjs"
