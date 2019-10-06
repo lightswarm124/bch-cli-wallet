@@ -12,17 +12,7 @@ const AppUtils = require("../../src/util")
 const config = require("../../config")
 
 // Mocking data
-const { bitboxMock } = require("../mocks/bitbox")
-const testwallet = require("../mocks/testwallet.json")
 const utilMocks = require("../mocks/util")
-
-// Inspect utility used for debugging.
-const util = require("util")
-util.inspect.defaultOptions = {
-  showHidden: true,
-  colors: true,
-  depth: 1
-}
 
 // Set default environment variables for unit tests.
 if (!process.env.TEST) process.env.TEST = "unit"
@@ -100,6 +90,13 @@ describe("#util.js", () => {
       //console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
       assert.hasAnyKeys(result, ["keyPair", "chainCode", "index"])
+    })
+  })
+
+  describe("#validateUtxo", () => {
+    it("should validate a UTXO", async () => {
+      const result = await appUtils.validateUtxo(utilMocks.mockUtxo)
+      console.log(`result: ${JSON.stringify(result, null, 2)}`)
     })
   })
 })

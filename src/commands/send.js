@@ -202,6 +202,7 @@ class Send extends Command {
   // 1. The UTXO must be larger than or equal to the amount of BCH to send.
   // 2. The UTXO should be as close to the amount of BCH as possible.
   //    i.e. as small as possible
+  // 3. Full node must validate that the UTXO has not been spent.
   // Returns a single UTXO object.
   selectUTXO(bch, utxos) {
     let candidateUTXO = {}
@@ -214,6 +215,7 @@ class Send extends Command {
     // Loop through all the UTXOs.
     for (var i = 0; i < utxos.length; i++) {
       const thisUTXO = utxos[i]
+
       // The UTXO must be greater than or equal to the send amount.
       if (thisUTXO.satoshis >= total) {
         // Automatically assign if the candidateUTXO is an empty object.

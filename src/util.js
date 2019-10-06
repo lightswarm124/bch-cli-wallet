@@ -200,6 +200,20 @@ class AppUtils {
 
     return tempNum
   }
+
+  // Call the full node to validate that UTXO has not been spent.
+  async validateUtxo(utxo) {
+    try {
+      // Input validation.
+      if (!utxo.txid) throw new Error(`utxo does not have a txid property`)
+
+      const txout = await this.BITBOX.Blockchain.getTxOut(utxo.txid)
+      return txout
+    } catch (err) {
+      console.error("Error in util.js/validateUtxo()")
+      throw err
+    }
+  }
 }
 
 module.exports = AppUtils
