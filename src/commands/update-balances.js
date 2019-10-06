@@ -36,7 +36,7 @@ class UpdateBalances extends Command {
       this.validateFlags(flags)
 
       // Update the balances in the wallet.
-      walletInfo = await this.updateBalances(flags)
+      const walletInfo = await this.updateBalances(flags)
 
       console.log(`Updated balance: ${walletInfo.balance} BCH`)
     } catch (err) {
@@ -79,7 +79,7 @@ class UpdateBalances extends Command {
 
     // Update hasBalance array with non-zero balances.
     const hasBalance = this.generateHasBalance(addressData.addressData)
-    console.log(`hasBalance: ${JSON.stringify(hasBalance, null, 2)}`)
+    // console.log(`hasBalance: ${JSON.stringify(hasBalance, null, 2)}`)
 
     // Sum all the balances in hasBalance to calculate total balance.
     const balance = this.sumConfirmedBalances(hasBalance, true)
@@ -225,8 +225,10 @@ class UpdateBalances extends Command {
       // console.log(`balances: ${JSON.stringify(balances, null, 2)}`)
 
       // get SLP utxo information for the addresses
+      // DEV NOTE: Replace slpUtxos with an empty [] if you want to ignore
+      // tokens in a wallet.
       const slpUtxos = await this.getSlpUtxos(addresses)
-      //console.log(`slpUtxos: ${JSON.stringify(slpUtxos, null, 2)}`)
+      // console.log(`slpUtxos: ${JSON.stringify(slpUtxos, null, 2)}`)
 
       return { balances, slpUtxos }
     } catch (err) {
@@ -259,7 +261,7 @@ class UpdateBalances extends Command {
       let slpUtxos = []
       for (let i = 0; i < consolidatedBalances.length; i++) {
         const thisAddress = consolidatedBalances[i][0].slpAddress
-        //console.log(`thisAddress: ${JSON.stringify(thisAddress, null, 2)}`)
+        // console.log(`thisAddress: ${JSON.stringify(thisAddress, null, 2)}`)
 
         // Get all SLP token UTXOs associated with this address.
         const tokenUtxos = await this.findSlpUtxos(thisAddress)
@@ -308,6 +310,7 @@ class UpdateBalances extends Command {
         tokenUtxos[i].cashAddr = cashAddr
         tokenUtxos[i].slpAddr = slpAddr
       }
+      // console.log(`tokenUtxos: ${JSON.stringify(tokenUtxos, null, 2)}`)
 
       return tokenUtxos
     } catch (err) {
