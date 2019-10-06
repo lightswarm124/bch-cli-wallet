@@ -16,6 +16,7 @@ const config = require("../../config")
 const testwallet = require("../mocks/testwallet.json")
 const { bitboxMock } = require("../mocks/bitbox")
 const updateBalancesMocks = require("../mocks/mock-data")
+const updateBalancesMocks2 = require("../mocks/update-balance-mocks")
 
 // Inspect utility used for debugging.
 const util = require("util")
@@ -119,7 +120,7 @@ describe("#update-balances.js", () => {
       }
     })
 
-    it("should return an arrays of address and SLP data", async () => {
+    it("should return an array of address and SLP data", async () => {
       updateBalances.BITBOX = new config.BCHLIB({
         restURL: config.TESTNET_REST
       })
@@ -133,8 +134,10 @@ describe("#update-balances.js", () => {
         sandbox.stub(updateBalances, "getSlpUtxos").resolves([])
       }
 
+      // console.log(`mockedWallet: ${JSON.stringify(mockedWallet, null, 2)}`)
+
       const result = await updateBalances.getAddressData(mockedWallet, 0, 2)
-      //console.log(`result: ${util.inspect(result)}`)
+      console.log(`result: ${util.inspect(result)}`)
 
       assert.isArray(result.balances)
       assert.isArray(result.slpUtxos)
@@ -231,15 +234,12 @@ describe("#update-balances.js", () => {
 
   describe("#sumConfirmedBalances", () => {
     it("should aggregate balances", async () => {
-      // Retrieve mocked data
-      const addressData = bitboxMock.Address.details()
+      const balanceTotal = await updateBalances.sumConfirmedBalances(
+        updateBalancesMocks2.hasBalanceMock
+      )
+      // console.log(`balanceTotal: ${balanceTotal}`)
 
-      const hasBalance = await updateBalances.generateHasBalance(addressData)
-
-      const balanceTotal = await updateBalances.sumConfirmedBalances(hasBalance)
-      //console.log(`balanceTotal: ${balanceTotal}`)
-
-      assert.equal(balanceTotal, 0.09999752)
+      assert.equal(balanceTotal, 0.09977288)
     })
   })
 

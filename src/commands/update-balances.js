@@ -79,6 +79,7 @@ class UpdateBalances extends Command {
 
     // Update hasBalance array with non-zero balances.
     const hasBalance = this.generateHasBalance(addressData.addressData)
+    console.log(`hasBalance: ${JSON.stringify(hasBalance, null, 2)}`)
 
     // Sum all the balances in hasBalance to calculate total balance.
     const balance = this.sumConfirmedBalances(hasBalance, true)
@@ -112,7 +113,7 @@ class UpdateBalances extends Command {
           currentIndex,
           20
         )
-        //console.log(`thisDataBatch: ${util.inspect(thisDataBatch)}`)
+        // console.log(`thisDataBatch: ${util.inspect(thisDataBatch)}`)
 
         // Increment the index by 20 (addresses).
         currentIndex += 20
@@ -391,31 +392,38 @@ class UpdateBalances extends Command {
   // Sums the confirmed balances in the hasBalance array to create a single,
   // aggrigate balance
   sumConfirmedBalances(hasBalance, verbose) {
-    let total = 0
-    let totalConfirmed = 0
-    let totalUnconfirmed = 0
+    try {
+      let total = 0
+      let totalConfirmed = 0
+      let totalUnconfirmed = 0
 
-    for (var i = 0; i < hasBalance.length; i++) {
-      const thisHasBalance = hasBalance[i]
+      for (var i = 0; i < hasBalance.length; i++) {
+        const thisHasBalance = hasBalance[i]
 
-      total += thisHasBalance.balance + thisHasBalance.unconfirmedBalance
-      totalConfirmed += thisHasBalance.balance
-      totalUnconfirmed += thisHasBalance.unconfirmedBalance
+        total += thisHasBalance.balance + thisHasBalance.unconfirmedBalance
+        totalConfirmed += thisHasBalance.balance
+        totalUnconfirmed += thisHasBalance.unconfirmedBalance
+      }
+
+      // Convert to satoshis
+      const totalSatoshis = Math.floor(total * SATS_PER_BCH)
+      const totalConfirmedSatoshis = Math.floor(totalConfirmed * SATS_PER_BCH)
+      const totalUnconfirmedSatoshis = Math.floor(
+        totalUnconfirmed * SATS_PER_BCH
+      )
+
+      // Convert back to BCH
+      total = totalSatoshis / SATS_PER_BCH
+      totalConfirmed = totalConfirmedSatoshis / SATS_PER_BCH
+      totalUnconfirmed = totalUnconfirmedSatoshis / SATS_PER_BCH
+
+      if (verbose) return { totalConfirmed, totalUnconfirmed }
+
+      return total
+    } catch (err) {
+      console.log(`Error in update-balances.js/sumConfirmedBalances()`)
+      throw err
     }
-
-    // Convert to satoshis
-    const totalSatoshis = Math.floor(total * SATS_PER_BCH)
-    const totalConfirmedSatoshis = Math.floor(totalConfirmed * SATS_PER_BCH)
-    const totalUnconfirmedSatoshis = Math.floor(totalUnconfirmed * SATS_PER_BCH)
-
-    // Convert back to BCH
-    total = totalSatoshis / SATS_PER_BCH
-    totalConfirmed = totalConfirmedSatoshis / SATS_PER_BCH
-    totalUnconfirmed = totalUnconfirmedSatoshis / SATS_PER_BCH
-
-    if (verbose) return { totalConfirmed, totalUnconfirmed }
-
-    return total
   }
 }
 
