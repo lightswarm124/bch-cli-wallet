@@ -15,8 +15,7 @@ const config = require("../../config")
 // Mock data
 const testwallet = require("../mocks/testwallet.json")
 const { bitboxMock } = require("../mocks/bitbox")
-const updateBalancesMocks = require("../mocks/mock-data")
-const updateBalancesMocks2 = require("../mocks/update-balance-mocks")
+const updateBalancesMocks = require("../mocks/update-balance-mocks")
 
 // Inspect utility used for debugging.
 const util = require("util")
@@ -34,7 +33,6 @@ describe("#update-balances.js", () => {
   const filename = `${__dirname}/../../wallets/test123.json`
   let updateBalances
   let sandbox
-  let mockDataCopy
 
   beforeEach(() => {
     updateBalances = new UpdateBalances()
@@ -43,7 +41,6 @@ describe("#update-balances.js", () => {
     updateBalances.BITBOX = bitboxMock
 
     mockedWallet = Object.assign({}, testwallet) // Clone the testwallet
-    mockDataCopy = Object.assign({}, updateBalancesMocks)
 
     sandbox = sinon.createSandbox()
   })
@@ -156,7 +153,7 @@ describe("#update-balances.js", () => {
 
     it("should return false when addresses have no balance", () => {
       const result = updateBalances.detectBalance(
-        mockDataCopy.mockAddressDetails2
+        updateBalancesMocks.mockAddressDetails2
       )
 
       assert.equal(result, false, "Boolean false expected.")
@@ -235,7 +232,7 @@ describe("#update-balances.js", () => {
   describe("#sumConfirmedBalances", () => {
     it("should aggregate balances", async () => {
       const balanceTotal = await updateBalances.sumConfirmedBalances(
-        updateBalancesMocks2.hasBalanceMock
+        updateBalancesMocks.hasBalanceMock
       )
       // console.log(`balanceTotal: ${balanceTotal}`)
 
