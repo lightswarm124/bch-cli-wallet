@@ -4,24 +4,43 @@
 
 "use strict"
 
-const mockUtxo = {
-  utxos: [
+const mockUtxo = [
+  {
+    txid: "2cb218dc02e5df66506950174bfa540497973cba141f1ff737d3be042069c935",
+    vout: 0,
+    value: "1000",
+    height: 1332533,
+    confirmations: 32,
+    satoshis: 1000,
+    hdIndex: 1
+  }
+]
+
+const mockWallet = {
+  network: "testnet",
+  mnemonic:
+    "alert mad wreck salon target later across crater stick mammal grunt ability",
+  derivation: 245,
+  rootAddress: "bchtest:qzl37uzel5urphw8dnkerxtlr5mxunvsys062p7g9v",
+  balance: 0.00001,
+  nextAddress: 3,
+  hasBalance: [
     {
-      txid: "fc2d806e1395e6fbc57f1dbedbd6e04794e2105d1c8915c49539b5041b12345c",
-      vout: 1,
-      amount: 0.1,
-      satoshis: 10000000,
-      height: 1296652,
-      confirmations: 1
+      index: 1,
+      balance: 0.00001,
+      balanceSat: 1000,
+      unconfirmedBalance: 0,
+      unconfirmedBalanceSat: 0,
+      cashAddress: "bchtest:qzylf04c9f9d20gndgw9dp82602umwzuuqhnxv7jmn"
     }
   ],
-  legacyAddress: "msnHMfK2pwaBWdE7a7y4f7atdzYahRM7t8",
-  cashAddress: "bchtest:qzrg022p8ykc90c27gy808pmz3lzlwk6lg77y3h8fm",
-  scriptPubKey: "76a9148687a941392d82bf0af208779c3b147e2fbadafa88ac"
+  name: "temp",
+  balanceConfirmed: 0.00001,
+  balanceUnconfirmed: 0,
+  SLPUtxos: []
 }
 
-const utilMockData = {
-  mockUtxo
+module.exports = {
+  mockUtxo,
+  mockWallet
 }
-
-module.exports = utilMockData
