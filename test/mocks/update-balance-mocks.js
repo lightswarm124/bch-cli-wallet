@@ -128,11 +128,36 @@ const mockBalancesForAddress = [
   ]
 ]
 
+const mockWallet = {
+  network: "testnet",
+  mnemonic:
+    "alert mad wreck salon target later across crater stick mammal grunt ability",
+  derivation: 245,
+  rootAddress: "bchtest:qzl37uzel5urphw8dnkerxtlr5mxunvsys062p7g9v",
+  balance: 0.00001,
+  nextAddress: 3,
+  hasBalance: [
+    {
+      index: 1,
+      balance: 0.00001,
+      balanceSat: 1000,
+      unconfirmedBalance: 0,
+      unconfirmedBalanceSat: 0,
+      cashAddress: "bchtest:qzylf04c9f9d20gndgw9dp82602umwzuuqhnxv7jmn"
+    }
+  ],
+  name: "temp",
+  balanceConfirmed: 0.00001,
+  balanceUnconfirmed: 0,
+  SLPUtxos: []
+}
+
 module.exports = {
   mockAddressDetails1,
   mockAddressDetails2,
   hasBalanceMock,
   mockTokenUtxo,
   mockTokenUtxoDetails,
-  mockBalancesForAddress
+  mockBalancesForAddress,
+  mockWallet
 }

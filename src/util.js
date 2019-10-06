@@ -117,6 +117,13 @@ class AppUtils {
   // Generate a change address from a Mnemonic of a private key.
   async changeAddrFromMnemonic(walletInfo, index) {
     try {
+      if (!walletInfo.derivation)
+        throw new Error(`walletInfo must have integer derivation value.`)
+      console.log(`walletInfo: ${JSON.stringify(walletInfo, null, 2)}`)
+
+      if (!index) throw new Error(`index must be a positive integer.`)
+      console.log(`index: ${index}`)
+
       // root seed buffer
       let rootSeed
       if (config.RESTAPI === "bitcoin.com")
@@ -129,6 +136,7 @@ class AppUtils {
       else var masterHDNode = this.BITBOX.HDNode.fromSeed(rootSeed)
 
       // HDNode of BIP44 account
+      console.log(`derivation path: m/44'/${walletInfo.derivation}'/0'`)
       const account = this.BITBOX.HDNode.derivePath(
         masterHDNode,
         `m/44'/${walletInfo.derivation}'/0'`

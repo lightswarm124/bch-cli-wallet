@@ -121,7 +121,7 @@ class SendTokens extends Command {
     } catch (err) {
       //if (err.message) console.log(err.message)
       //else console.log(`Error in .run: `, err)
-      console.log(`Error in send.js/run(): `, err)
+      console.log(`Error in send-tokens.js/run(): `, err)
     }
   }
 
@@ -204,7 +204,7 @@ class SendTokens extends Command {
         this.BITBOX.Address.toLegacyAddress(changeAddress),
         remainder
       )
-
+      console.log(`utxo.hdIndex: ${utxo.hdIndex}`)
       // Generate a keypair from the change address.
       const change = await appUtils.changeAddrFromMnemonic(
         walletInfo,
@@ -226,7 +226,7 @@ class SendTokens extends Command {
       // Sign each token UTXO being consumed.
       for (let i = 0; i < tokenUtxos.length; i++) {
         const thisUtxo = tokenUtxos[i]
-
+        console.log(`thisUtxo.hdIndex: ${thisUtxo.hdIndex}`)
         // Generate a keypair to sign the SLP UTXO.
         const slpChangeAddr = await appUtils.changeAddrFromMnemonic(
           walletInfo,

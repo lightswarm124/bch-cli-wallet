@@ -214,12 +214,12 @@ class UpdateBalances extends Command {
 
       // Get the list of addresses.
       const addresses = await this.generateAddress(walletInfo, index, limit)
-      //console.log(`addresses: ${util.inspect(addresses)}`)
+      console.log(`addresses: ${util.inspect(addresses)}`)
 
       // get BCH balance and details for each address.
       // const balances = await this.BITBOX.Address.details(addresses)
       const balances = await this.BITBOX.Blockbook.balance(addresses)
-      // console.log(`balances: ${JSON.stringify(balances, null, 2)}`)
+      console.log(`balances: ${JSON.stringify(balances, null, 2)}`)
 
       // get SLP utxo information for the addresses
       const slpUtxos = await this.getSlpUtxos(addresses)
@@ -319,6 +319,10 @@ class UpdateBalances extends Command {
   // e.g. generateAddress(walletInfo, 20, 10)
   // will generate a 20-element array of addresses from index 20 to 29
   async generateAddress(walletInfo, index, limit) {
+    // console.log(`walletInfo: ${JSON.stringify(walletInfo, null, 2)}`)
+
+    if (!walletInfo.mnemonic) throw new Error(`mnemonic is undefined!`)
+
     // root seed buffer
     let rootSeed
     if (config.RESTAPI === "bitcoin.com")
