@@ -10,26 +10,26 @@ const mockAddressDetails1 = [
     page: 1,
     totalPages: 1,
     itemsOnPage: 1000,
-    address: "bchtest:qrls6vzjkkxlds7aqv9075u0fttwc7u9jvczn5fdt9",
-    balance: "8954",
-    totalReceived: "8954",
-    totalSent: "0",
-    unconfirmedBalance: "0",
-    unconfirmedTxs: 0,
-    txs: 1,
-    txids: ["sometxid"]
-  },
-  {
-    page: 1,
-    totalPages: 1,
-    itemsOnPage: 1000,
-    address: "bchtest:qzayl9rxxprzst3fnydykx2rt4d746fcqq8mh040hp",
+    address: "bchtest:qzl37uzel5urphw8dnkerxtlr5mxunvsys062p7g9v",
     balance: "0",
     totalReceived: "0",
     totalSent: "0",
     unconfirmedBalance: "0",
     unconfirmedTxs: 0,
     txs: 0
+  },
+  {
+    page: 1,
+    totalPages: 1,
+    itemsOnPage: 1000,
+    address: "bchtest:qzylf04c9f9d20gndgw9dp82602umwzuuqhnxv7jmn",
+    balance: "1000",
+    totalReceived: "1000",
+    totalSent: "0",
+    unconfirmedBalance: "0",
+    unconfirmedTxs: 0,
+    txs: 1,
+    txids: ["2cb218dc02e5df66506950174bfa540497973cba141f1ff737d3be042069c935"]
   }
 ]
 
@@ -39,7 +39,7 @@ const mockAddressDetails2 = [
     page: 1,
     totalPages: 1,
     itemsOnPage: 1000,
-    address: "bchtest:qrls6vzjkkxlds7aqv9075u0fttwc7u9jvczn5fdt9",
+    address: "bchtest:qzl37uzel5urphw8dnkerxtlr5mxunvsys062p7g9v",
     balance: "0",
     totalReceived: "0",
     totalSent: "0",
@@ -51,7 +51,7 @@ const mockAddressDetails2 = [
     page: 1,
     totalPages: 1,
     itemsOnPage: 1000,
-    address: "bchtest:qzayl9rxxprzst3fnydykx2rt4d746fcqq8mh040hp",
+    address: "bchtest:qzylf04c9f9d20gndgw9dp82602umwzuuqhnxv7jmn",
     balance: "0",
     totalReceived: "0",
     totalSent: "0",
@@ -80,31 +80,52 @@ const hasBalanceMock = [
   }
 ]
 
-const mockTokenUtxo = {
-  utxos: [
-    {
-      txid: "4588c219dd5842ddce3962d1dfe443b92337fa91d5314ee7792b9cd8dac32075",
-      vout: 1,
-      amount: 0.00000546,
-      satoshis: 546,
-      height: 597740,
-      confirmations: 604
-    }
-  ],
-  legacyAddress: "16qFZvK3t7hiXxPJh1wMHnmugzQHAVQgB3",
-  cashAddress: "bitcoincash:qqll3st8xl0k8cgv8dgrrrkntv6hqdn8huv3xm2ztf",
-  scriptPubKey: "76a9143ff8c16737df63e10c3b50318ed35b35703667bf88ac"
-}
-
-const mockTokenUtxoDetails = [
+const mockTokenUtxo = [
+  {
+    txid: "c5ba34388b688459a1de02eeffb4e9b0f24eb45203ec90fe44f855686686ca3c",
+    vout: 2,
+    value: "546",
+    height: 601149,
+    confirmations: 2274,
+    satoshis: 546
+  },
   {
     txid: "4588c219dd5842ddce3962d1dfe443b92337fa91d5314ee7792b9cd8dac32075",
     vout: 1,
-    amount: 0.00000546,
-    satoshis: 546,
+    value: "546",
     height: 597740,
-    confirmations: 604,
+    confirmations: 5683,
+    satoshis: 546
+  }
+]
+
+const mockTokenUtxoDetails = [
+  {
+    txid: "c5ba34388b688459a1de02eeffb4e9b0f24eb45203ec90fe44f855686686ca3c",
+    vout: 2,
+    value: "546",
+    height: 601149,
+    confirmations: 2274,
+    satoshis: 546,
     utxoType: "token",
+    transactionType: "send",
+    tokenId: "ebd3043ea18b7c004395307d26bbb62b416bf858d07e2717b45194c64a186c03",
+    tokenTicker: "p\u001f\u000e+",
+    tokenName: "bang cash lotto ticket",
+    tokenDocumentUrl: "http://bang.cash/",
+    tokenDocumentHash: "",
+    decimals: 0,
+    tokenQty: 3
+  },
+  {
+    txid: "4588c219dd5842ddce3962d1dfe443b92337fa91d5314ee7792b9cd8dac32075",
+    vout: 1,
+    value: "546",
+    height: 597740,
+    confirmations: 5683,
+    satoshis: 546,
+    utxoType: "token",
+    transactionType: "send",
     tokenId: "3b3dbc418af179bfa9832255e9cc4e4bb7abacde8da62881f6eb466cbf70cc66",
     tokenTicker: "p\u001f\r\u001e",
     tokenName: "p\u001f\r\u001e",

@@ -17,7 +17,7 @@ let RESTAPI = "bchjs"
 if (process.env.RESTAPI && process.env.RESTAPI !== "")
   RESTAPI = process.env.RESTAPI
 
-console.log(`process.env.RESTAPI: ${process.env.RESTAPI}`)
+// console.log(`process.env.RESTAPI: ${process.env.RESTAPI}`)
 
 // Ensure bch-js can pick up the env var.
 process.env.RESTAPI = RESTAPI
