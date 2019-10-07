@@ -24,10 +24,6 @@ const appUtils = new AppUtils()
 // Mainnet by default
 const BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
 
-// Used for debugging and error reporting.
-const util = require("util")
-util.inspect.defaultOptions = { depth: 2 }
-
 const { Command, flags } = require("@oclif/command")
 
 class Send extends Command {
@@ -36,6 +32,7 @@ class Send extends Command {
     //_this = this
 
     this.BITBOX = BITBOX
+    this.appUtils = appUtils
   }
 
   async run() {
@@ -51,13 +48,13 @@ class Send extends Command {
 
       // Open the wallet data file.
       const filename = `${__dirname}/../../wallets/${name}.json`
-      let walletInfo = appUtils.openWallet(filename)
+      let walletInfo = this.appUtils.openWallet(filename)
       walletInfo.name = name
 
       // Determine if this is a testnet wallet or a mainnet wallet.
       if (walletInfo.network === "testnet") {
         this.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
-        appUtils.BITBOX = this.BITBOX
+        this.appUtils.BITBOX = this.BITBOX
       }
 
       // Update balances before sending.
@@ -66,7 +63,7 @@ class Send extends Command {
       walletInfo = await updateBalances.updateBalances(flags)
 
       // Get info on UTXOs controlled by this wallet.
-      const utxos = await appUtils.getUTXOs(walletInfo)
+      const utxos = await this.appUtils.getUTXOs(walletInfo)
       //console.log(`send utxos: ${util.inspect(utxos)}`)
 
       // Select optimal UTXO
@@ -94,9 +91,9 @@ class Send extends Command {
         walletInfo
       )
 
-      const txid = await appUtils.broadcastTx(hex)
+      const txid = await this.appUtils.broadcastTx(hex)
 
-      appUtils.displayTxid(txid, walletInfo.network)
+      this.appUtils.displayTxid(txid, walletInfo.network)
     } catch (err) {
       //if (err.message) console.log(err.message)
       //else console.log(`Error in .run: `, err)
@@ -164,7 +161,7 @@ class Send extends Command {
       )
 
       // Generate a keypair from the change address.
-      const change = await appUtils.changeAddrFromMnemonic(
+      const change = await this.appUtils.changeAddrFromMnemonic(
         walletInfo,
         utxo.hdIndex
       )
@@ -202,7 +199,7 @@ class Send extends Command {
   //    i.e. as small as possible
   // 3. Full node must validate that the UTXO has not been spent.
   // Returns a single UTXO object.
-  selectUTXO(bch, utxos) {
+  async selectUTXO(bch, utxos) {
     let candidateUTXO = {}
 
     const bchSatoshis = bch * 100000000
@@ -216,6 +213,10 @@ class Send extends Command {
 
       // The UTXO must be greater than or equal to the send amount.
       if (thisUTXO.satoshis >= total) {
+        // Skip if the UTXO is invalid
+        const isValid = await this.appUtils.isValidUtxo(thisUTXO)
+        if (!isValid) continue
+
         // Automatically assign if the candidateUTXO is an empty object.
         if (!candidateUTXO.satoshis) {
           candidateUTXO = thisUTXO

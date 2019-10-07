@@ -9,13 +9,15 @@
 const assert = require("chai").assert
 const sinon = require("sinon")
 
+const config = require("../../config")
+
 // Library under test.
 const Send = require("../../src/commands/send")
-const config = require("../../config")
 
 // Mock data
 const testwallet = require("../mocks/testwallet.json")
 const { bitboxMock } = require("../mocks/bitbox")
+const mockData = require("../mocks/send-mocks")
 
 // Inspect utility used for debugging.
 const util = require("util")
@@ -109,12 +111,17 @@ describe("send", () => {
   })
 
   describe("#selectUTXO", () => {
-    it("should select a single UTXO", async () => {
-      const bch = 0.0001
-      const utxos = bitboxMock.Address.utxo()
+    it("should select a single valid UTXO", async () => {
+      if (process.env.TEST === "unit")
+        sandbox.stub(send.appUtils, "isValidUtxo").resolves(true)
 
-      const utxo = await send.selectUTXO(bch, utxos.utxos, BITBOX)
-      //console.log(`utxo: ${util.inspect(utxo)}`)
+      const bch = 0.00005
+      // const utxos = bitboxMock.Address.utxo()
+      const utxos = mockData.mockUnspentUtxo
+      // console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
+
+      const utxo = await send.selectUTXO(bch, utxos)
+      // console.log(`utxo: ${JSON.stringify(utxo, null, 2)}`)
 
       assert.isObject(utxo, "Expect single utxo object")
       assert.hasAllKeys(utxo, [
@@ -128,8 +135,35 @@ describe("send", () => {
       ])
 
       // Since this test uses mocked data, the values are known ahead of time.
-      assert.equal(utxo.amount, 0.00079504)
+      assert.equal(utxo.amount, 0.00006)
     })
+
+    // it("should select a reject invalid UTXO", async () => {
+    //   if (process.env.TEST === "unit")
+    //     sandbox.stub(send.appUtils, "isValidUtxo").resolves(true)
+    //
+    //   const bch = 0.00005
+    //   // const utxos = bitboxMock.Address.utxo()
+    //   const utxos = mockData.mockUnspentUtxo
+    //   // console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
+    //
+    //   const utxo = await send.selectUTXO(bch, utxos)
+    //   // console.log(`utxo: ${JSON.stringify(utxo, null, 2)}`)
+    //
+    //   assert.isObject(utxo, "Expect single utxo object")
+    //   assert.hasAllKeys(utxo, [
+    //     "txid",
+    //     "vout",
+    //     "amount",
+    //     "satoshis",
+    //     "height",
+    //     "confirmations"
+    //     //"hdIndex"
+    //   ])
+    //
+    //   // Since this test uses mocked data, the values are known ahead of time.
+    //   assert.equal(utxo.amount, 0.00006)
+    // })
   })
 
   describe("#sendBCH", () => {
