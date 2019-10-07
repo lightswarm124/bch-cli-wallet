@@ -37,7 +37,7 @@ describe("#util.js", () => {
       if (process.env.TEST === "unit") {
         sandbox
           .stub(appUtils.BITBOX.Blockbook, "utxo")
-          .resolves(utilMocks.mockUtxo)
+          .resolves(utilMocks.mockSpentUtxo)
       }
 
       const utxos = await appUtils.getUTXOs(utilMocks.mockWallet)
@@ -96,15 +96,43 @@ describe("#util.js", () => {
   describe("#validateUtxo", () => {
     it("should throw error on empty input", async () => {
       try {
-        await appUtils.validateUtxo({})
+        await appUtils.isValidUtxo({})
       } catch (err) {
         assert.include(err.message, "utxo does not have a txid property")
       }
     })
 
-    it("should validate a UTXO", async () => {
-      const result = await appUtils.validateUtxo(utilMocks.mockUtxo[0])
-      console.log(`result: ${JSON.stringify(result, null, 2)}`)
+    it("should throw error on malformed utxo", async () => {
+      try {
+        await appUtils.isValidUtxo({ txid: "sometxid" })
+      } catch (err) {
+        assert.include(err.message, "utxo does not have a vout property")
+      }
+    })
+
+    it("should return false for a spent UTXO", async () => {
+      // Unit test mocking.
+      if (process.env.TEST === "unit")
+        sandbox.stub(appUtils.BITBOX.Blockchain, "getTxOut").resolves(null)
+
+      const result = await appUtils.isValidUtxo(utilMocks.mockSpentUtxo[0])
+      // console.log(`result: ${JSON.stringify(result, null, 2)}`)
+
+      assert.equal(result, false)
+    })
+
+    it("should return true for an unspent UTXO", async () => {
+      // Unit test mocking.
+      if (process.env.TEST === "unit") {
+        sandbox
+          .stub(appUtils.BITBOX.Blockchain, "getTxOut")
+          .resolves(utilMocks.mockTxOut)
+      }
+
+      const result = await appUtils.isValidUtxo(utilMocks.mockUnspentUtxo[0])
+      // console.log(`result: ${JSON.stringify(result, null, 2)}`)
+
+      assert.equal(result, true)
     })
   })
 })

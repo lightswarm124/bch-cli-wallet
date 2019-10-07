@@ -227,6 +227,7 @@ class UpdateBalances extends Command {
       // get SLP utxo information for the addresses
       // DEV NOTE: Replace slpUtxos with an empty [] if you want to ignore
       // tokens in a wallet.
+      // const slpUtxos = []
       const slpUtxos = await this.getSlpUtxos(addresses)
       // console.log(`slpUtxos: ${JSON.stringify(slpUtxos, null, 2)}`)
 
@@ -249,8 +250,9 @@ class UpdateBalances extends Command {
 
       // Check addresses to see if they contain any SLP tokens.
       // Pings SLPDB with an optimized query.
+      // console.log(`addresses: ${JSON.stringify(addresses, null, 2)}`)
       const slpBalances = await this.BITBOX.Util.balancesForAddress(addresses)
-      //console.log(`slpBalances: ${JSON.stringify(slpBalances, null, 2)}`)
+      // console.log(`slpBalances: ${JSON.stringify(slpBalances, null, 2)}`)
 
       // Remove empty arrays (addresses that have no tokens).
       const consolidatedBalances = slpBalances.filter(x => {

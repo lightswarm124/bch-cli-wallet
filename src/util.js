@@ -77,7 +77,7 @@ class AppUtils {
           // Add the UTXO to the array if it has at least one confirmation.
           // Dev Note: Enable the line below if you want a more conservative
           // approach of wanting a confirmation for each UTXO before spending
-          // it.
+          // it. Most wallets spend unconfirmed UTXOs.
           //if (thisUTXO.confirmations > 0) retArray.push(thisUTXO)
           // zero-conf OK.
           retArray.push(thisUTXO)
@@ -202,15 +202,22 @@ class AppUtils {
   }
 
   // Call the full node to validate that UTXO has not been spent.
-  async validateUtxo(utxo) {
+  // Returns true if UTXO is unspent.
+  // Returns false if UTXO is spent.
+  async isValidUtxo(utxo) {
     try {
       // Input validation.
       if (!utxo.txid) throw new Error(`utxo does not have a txid property`)
+      if (!utxo.vout && utxo.vout !== 0)
+        throw new Error(`utxo does not have a vout property`)
 
-      console.log(`utxo: ${JSON.stringify(utxo, null, 2)}`)
+      // console.log(`utxo: ${JSON.stringify(utxo, null, 2)}`)
 
-      const txout = await this.BITBOX.Blockchain.getTxOut(utxo.txid)
-      return txout
+      const txout = await this.BITBOX.Blockchain.getTxOut(utxo.txid, utxo.vout)
+      // console.log(`txout: ${JSON.stringify(txout, null, 2)}`)
+
+      if (txout === null) return false
+      return true
     } catch (err) {
       console.error("Error in util.js/validateUtxo()")
       throw err
