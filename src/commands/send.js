@@ -71,7 +71,7 @@ class Send extends Command {
 
       // Select optimal UTXO
       const utxo = await this.selectUTXO(bch, utxos)
-      //console.log(`selected utxo: ${util.inspect(utxo)}`)
+      // console.log(`selected utxo: ${util.inspect(utxo)}`)
 
       // Exit if there is no UTXO big enough to fulfill the transaction.
       if (!utxo.amount) {
@@ -227,6 +227,8 @@ class Send extends Command {
         }
       }
     }
+
+    candidateUTXO.amount = candidateUTXO.satoshis / 100000000
 
     return candidateUTXO
   }

@@ -207,6 +207,8 @@ class AppUtils {
       // Input validation.
       if (!utxo.txid) throw new Error(`utxo does not have a txid property`)
 
+      console.log(`utxo: ${JSON.stringify(utxo, null, 2)}`)
+
       const txout = await this.BITBOX.Blockchain.getTxOut(utxo.txid)
       return txout
     } catch (err) {

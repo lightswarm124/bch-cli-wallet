@@ -94,8 +94,16 @@ describe("#util.js", () => {
   })
 
   describe("#validateUtxo", () => {
+    it("should throw error on empty input", async () => {
+      try {
+        await appUtils.validateUtxo({})
+      } catch (err) {
+        assert.include(err.message, "utxo does not have a txid property")
+      }
+    })
+
     it("should validate a UTXO", async () => {
-      const result = await appUtils.validateUtxo(utilMocks.mockUtxo)
+      const result = await appUtils.validateUtxo(utilMocks.mockUtxo[0])
       console.log(`result: ${JSON.stringify(result, null, 2)}`)
     })
   })
