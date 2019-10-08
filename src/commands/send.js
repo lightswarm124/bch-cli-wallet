@@ -215,7 +215,12 @@ class Send extends Command {
       if (thisUTXO.satoshis >= total) {
         // Skip if the UTXO is invalid
         const isValid = await this.appUtils.isValidUtxo(thisUTXO)
-        if (!isValid) continue
+        if (!isValid) {
+          console.log(
+            `warning: invalid UTXO found. You may need to wait for the indexer to catch up.`
+          )
+          continue
+        }
 
         // Automatically assign if the candidateUTXO is an empty object.
         if (!candidateUTXO.satoshis) {
