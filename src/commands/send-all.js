@@ -63,8 +63,6 @@ class SendAll extends Command {
       let walletInfo = appUtils.openWallet(filename)
       walletInfo.name = name
 
-      console.log(`Existing balance: ${walletInfo.balance} BCH`)
-
       // Determine if this is a testnet wallet or a mainnet wallet.
       if (walletInfo.network === "testnet") {
         this.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
@@ -74,7 +72,7 @@ class SendAll extends Command {
       // Update balances before sending.
       const updateBalances = new UpdateBalances()
       updateBalances.BITBOX = this.BITBOX
-      walletInfo = await updateBalances.updateBalances(filename, walletInfo)
+      walletInfo = await updateBalances.updateBalances(flags)
 
       // Get all UTXOs controlled by this wallet.
       const utxos = await appUtils.getUTXOs(walletInfo)

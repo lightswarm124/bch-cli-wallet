@@ -135,7 +135,7 @@ class Sweep extends Command {
 
       return txid
     } catch (err) {
-      console.log(`Error in sweep.js/sweep(): `, err)
+      console.log(`Error in sweep.js/sweep()`)
       throw err
     }
   }
@@ -153,9 +153,10 @@ class Sweep extends Command {
       const fromAddr = this.BITBOX.ECPair.toCashAddress(ecPair)
 
       // get BCH balance for the public address.
-      const balances = await this.BITBOX.Address.details(fromAddr)
+      const balances = await this.BITBOX.Blockbook.balance(fromAddr)
+      // console.log(`balances: ${JSON.stringify(balances, null, 2)}`)
 
-      return balances.balance
+      return Number(balances.balance)
     } catch (err) {
       console.log(`Error in sweep.js/getBalance()`)
       throw err

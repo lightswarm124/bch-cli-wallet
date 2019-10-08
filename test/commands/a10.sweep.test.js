@@ -12,34 +12,24 @@ const Sweep = require("../../src/commands/sweep")
 const config = require("../../config")
 
 // Mocking data
-const { bitboxMock } = require("../mocks/bitbox")
-const testwallet = require("../mocks/testwallet.json")
-const mockData = require("../mocks/mock-data")
-
-// Inspect utility used for debugging.
-const util = require("util")
-util.inspect.defaultOptions = {
-  showHidden: true,
-  colors: true,
-  depth: 1
-}
+// const { bitboxMock } = require("../mocks/bitbox")
+// const testwallet = require("../mocks/testwallet.json")
+const mockData = require("../mocks/sweep-mocks")
 
 // Set default environment variables for unit tests.
 if (!process.env.TEST) process.env.TEST = "unit"
 
 describe("Sweep", () => {
-  let BITBOX
   let mockedWallet
   let sweep
   let sandbox
 
   beforeEach(() => {
     // By default, use the mocking library instead of live calls.
-    BITBOX = bitboxMock
-    mockedWallet = Object.assign({}, testwallet) // Clone the testwallet
+    // mockedWallet = Object.assign({}, testwallet) // Clone the testwallet
 
     sweep = new Sweep()
-    sweep.BITBOX = BITBOX
+    // sweep.BITBOX = BITBOX
 
     sandbox = sinon.createSandbox()
   })
@@ -117,35 +107,54 @@ describe("Sweep", () => {
       sweep.BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
 
       const flags = {
-        wif: "L287yGQj4DB4fbUKSV7DMHsyGQs1qh2E3EYJ21P88mXNKaFvmNWk"
+        wif: "KzGSsGMuFgtwkTyT3T8jwS1yUNov2j79D4qoP3SnBDdiAJBKK9Te"
       }
 
       // Use mocked data if this is a unit test.
       if (process.env.TEST === "unit") {
-        // Generate the corect kind of mock data.
-        let mockDetails = mockData.mockAddressDetails1
-        mockDetails = mockDetails[0]
-        mockDetails.balance = 0.000013
-
-        sandbox.stub(sweep.BITBOX.Address, "details").resolves(mockDetails)
+        sandbox
+          .stub(sweep.BITBOX.Blockbook, "balance")
+          .resolves(mockData.mockBalance1)
       }
 
       const result = await sweep.getBalance(flags)
-      //console.log(`result: ${JSON.stringify(result, null, 2)}`)
+      // console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
       assert.isAbove(result, 0)
     })
   })
 
   describe("#sweep", () => {
-    it("should sweep funds", async () => {
-      // Use the real library if this is not a unit test
-      if (process.env.TEST !== "unit")
-        sweep.BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
+    it("should throw an error if there are no funds found", async () => {
+      // Mock the sendRawTransaction() function so the funds aren't actually swept.
+      sandbox
+        .stub(sweep.BITBOX.RawTransactions, "sendRawTransaction")
+        .resolves("txidString")
 
       const flags = {
         wif: "L287yGQj4DB4fbUKSV7DMHsyGQs1qh2E3EYJ21P88mXNKaFvmNWk",
         address: "bitcoincash:qqjes5sxwneywmnzqndvs6p3l9rp55a2ug0e6e6s0a"
+      }
+      try {
+        await sweep.sweep(flags)
+        // console.log(`result: ${JSON.stringify(result, null, 2)}`)
+      } catch (err) {
+        // console.log(`error: ${err.message}`, err)
+        assert.include(err.message, "Original amount is zero")
+      }
+
+      // assert.isString(result[0], "Returned value should be a txid string.")
+    })
+
+    it("should sweep funds", async () => {
+      // Mock the sendRawTransaction() function so the funds aren't actually swept.
+      sandbox
+        .stub(sweep.BITBOX.RawTransactions, "sendRawTransaction")
+        .resolves("txidString")
+
+      const flags = {
+        wif: "KzGSsGMuFgtwkTyT3T8jwS1yUNov2j79D4qoP3SnBDdiAJBKK9Te",
+        address: "bitcoincash:qqtc3vqfzz050jkvcfjvtzj392lf6wlqhun3fw66n9"
       }
 
       const result = await sweep.sweep(flags)
