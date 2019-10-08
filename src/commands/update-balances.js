@@ -111,6 +111,7 @@ class UpdateBalances extends Command {
         this.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
 
       while (batchHasBalance) {
+        // while (batchHasBalance || currentIndex < 60) {
         // Get a 20-address batch of data.
         const thisDataBatch = await this.getAddressData(
           walletInfo,

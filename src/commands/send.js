@@ -90,6 +90,7 @@ class Send extends Command {
         sendToAddr,
         walletInfo
       )
+      // console.log(`hex: ${hex}`)
 
       const txid = await this.appUtils.broadcastTx(hex)
 
