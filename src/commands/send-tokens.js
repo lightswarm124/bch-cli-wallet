@@ -113,6 +113,7 @@ class SendTokens extends Command {
         walletInfo,
         tokenUtxos
       )
+      console.log(`hex: ${hex}`)
 
       const txid = await appUtils.broadcastTx(hex)
       appUtils.displayTxid(txid, walletInfo.network)

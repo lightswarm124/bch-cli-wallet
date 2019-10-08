@@ -222,6 +222,9 @@ class Send extends Command {
           continue
         }
 
+        // Skip if change would less than the dust amount.
+        if (thisUTXO.satoshis - bchSatoshis < 546) continue
+
         // Automatically assign if the candidateUTXO is an empty object.
         if (!candidateUTXO.satoshis) {
           candidateUTXO = thisUTXO

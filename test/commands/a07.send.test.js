@@ -138,7 +138,23 @@ describe("send", () => {
       assert.equal(utxo.amount, 0.00006)
     })
 
-    it("should select a reject invalid UTXO", async () => {
+    it("should reject if output is less than dust", async () => {
+      if (process.env.TEST === "unit")
+        sandbox.stub(send.appUtils, "isValidUtxo").resolves(true)
+
+      const bch = 0.000058
+      // const utxos = bitboxMock.Address.utxo()
+      const utxos = mockData.mockUnspentUtxo
+      // console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
+
+      const utxo = await send.selectUTXO(bch, utxos)
+      // console.log(`utxo: ${JSON.stringify(utxo, null, 2)}`)
+
+      assert.isObject(utxo, "Expect empty object")
+      assert.deepEqual(utxo, {})
+    })
+
+    it("should reject an invalid UTXO", async () => {
       if (process.env.TEST === "unit")
         sandbox.stub(send.appUtils, "isValidUtxo").resolves(false)
 
