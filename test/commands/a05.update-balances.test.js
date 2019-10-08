@@ -396,4 +396,17 @@ describe("#update-balances.js", () => {
       })
     }
   })
+
+  describe("#addSLPIndex", () => {
+    it("should return token UTXOs with index value", () => {
+      const result = updateBalances.addSLPIndex(
+        updateBalancesMocks.mockAddressData,
+        updateBalancesMocks.mockSlpUtxoData
+      )
+      // console.log(`result: ${JSON.stringify(result, null, 2)}`)
+
+      assert.hasAnyKeys(result[0], ["hdIndex"])
+      assert.equal(result[0].hdIndex, 9)
+    })
+  })
 })
