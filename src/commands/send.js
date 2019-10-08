@@ -229,7 +229,8 @@ class Send extends Command {
       }
     }
 
-    candidateUTXO.amount = candidateUTXO.satoshis / 100000000
+    if (candidateUTXO.satoshis)
+      candidateUTXO.amount = candidateUTXO.satoshis / 100000000
 
     return candidateUTXO
   }

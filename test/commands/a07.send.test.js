@@ -138,32 +138,21 @@ describe("send", () => {
       assert.equal(utxo.amount, 0.00006)
     })
 
-    // it("should select a reject invalid UTXO", async () => {
-    //   if (process.env.TEST === "unit")
-    //     sandbox.stub(send.appUtils, "isValidUtxo").resolves(true)
-    //
-    //   const bch = 0.00005
-    //   // const utxos = bitboxMock.Address.utxo()
-    //   const utxos = mockData.mockUnspentUtxo
-    //   // console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
-    //
-    //   const utxo = await send.selectUTXO(bch, utxos)
-    //   // console.log(`utxo: ${JSON.stringify(utxo, null, 2)}`)
-    //
-    //   assert.isObject(utxo, "Expect single utxo object")
-    //   assert.hasAllKeys(utxo, [
-    //     "txid",
-    //     "vout",
-    //     "amount",
-    //     "satoshis",
-    //     "height",
-    //     "confirmations"
-    //     //"hdIndex"
-    //   ])
-    //
-    //   // Since this test uses mocked data, the values are known ahead of time.
-    //   assert.equal(utxo.amount, 0.00006)
-    // })
+    it("should select a reject invalid UTXO", async () => {
+      if (process.env.TEST === "unit")
+        sandbox.stub(send.appUtils, "isValidUtxo").resolves(false)
+
+      const bch = 0.00005
+      // const utxos = bitboxMock.Address.utxo()
+      const utxos = mockData.mockSpentUtxo
+      // console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
+
+      const utxo = await send.selectUTXO(bch, utxos)
+      // console.log(`utxo: ${JSON.stringify(utxo, null, 2)}`)
+
+      assert.isObject(utxo, "Expect empty object")
+      assert.deepEqual(utxo, {})
+    })
   })
 
   describe("#sendBCH", () => {

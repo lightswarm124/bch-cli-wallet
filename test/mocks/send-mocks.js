@@ -18,7 +18,7 @@ const mockUnspentUtxo = [
 
 const mockSpentUtxo = [
   {
-    txid: "2cb218dc02e5df66506950174bfa540497973cba141f1ff737d3be042069c935",
+    txid: "4cf8d184de587912d13c4a5af94ae4e58262a76ee35ea84a42ddaacbeaa8ce7a",
     vout: 0,
     value: "1000",
     height: 1332533,
