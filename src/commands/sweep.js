@@ -42,7 +42,23 @@ class Sweep extends Command {
 
       // Retrieve the balance of the private key. If empty, exit.
       const balance = await this.getBalance(flags)
-      this.log(`balance: ${balance}`)
+      this.log(`balance: ${balance} satoshis`)
+
+      // Get UTXOs and analyze them for SLP tokens
+      const { bchUtxos, tokenUtxos } = await this.getTokens(flags)
+      console.log(`bchUtxos: ${JSON.stringify(bchUtxos, null, 2)}`)
+      console.log(`tokenUtxos: ${JSON.stringify(tokenUtxos, null, 2)}`)
+
+      // If there are tokens, summarize and display the data for each token found.
+      if (tokenUtxos.length > 0) {
+        // this.log(`token UTXOs: ${JSON.stringify(tokenUtxos, null, 2)}`)
+        for (let i = 0; i < tokenUtxos.length; i++) {
+          const token = tokenUtxos[i]
+          console.log(
+            `token: ${token.tokenTicker}, qty: ${token.tokenQty}, token ID: ${token.tokenId}`
+          )
+        }
+      }
 
       // Exit if only the balance needed to be retrieved.
       if (flags.balanceOnly || balance === 0) return
@@ -131,9 +147,8 @@ class Sweep extends Command {
       // output rawhex
       const hex = tx.toHex()
 
-      const txid = await this.BITBOX.RawTransactions.sendRawTransaction([hex])
-
-      return txid
+      // const txid = await this.BITBOX.RawTransactions.sendRawTransaction([hex])
+      // return txid
     } catch (err) {
       console.log(`Error in sweep.js/sweep()`)
       throw err
@@ -159,6 +174,46 @@ class Sweep extends Command {
       return Number(balances.balance)
     } catch (err) {
       console.log(`Error in sweep.js/getBalance()`)
+      throw err
+    }
+  }
+
+  // Analyzes the utxos to see if the WIF controls any SLP tokens.
+  async getTokens(flags) {
+    try {
+      if (flags.testnet)
+        this.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
+
+      const wif = flags.wif
+
+      const ecPair = this.BITBOX.ECPair.fromWIF(wif)
+
+      const fromAddr = this.BITBOX.ECPair.toCashAddress(ecPair)
+
+      // get BCH balance for the public address.
+      const utxos = await this.BITBOX.Blockbook.utxo(fromAddr)
+      // console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
+
+      const tokenUtxos = []
+      const bchUtxos = []
+
+      // Exit if there are no UTXOs.
+      if (utxos.length === 0) return { bchUtxos, tokenUtxos }
+
+      // Figure out which UTXOs are associated with SLP tokens.
+      const isTokenUtxo = await this.BITBOX.Util.tokenUtxoDetails(utxos)
+      // console.log(`isTokenUtxo: ${JSON.stringify(isTokenUtxo, null, 2)}`)
+
+      // Separate the bch and token UTXOs.
+      for (let i = 0; i < utxos.length; i++) {
+        // Filter based on isTokenUtxo.
+        if (!isTokenUtxo[i]) bchUtxos.push(utxos[i])
+        else tokenUtxos.push(isTokenUtxo[i])
+      }
+
+      return { bchUtxos, tokenUtxos }
+    } catch (err) {
+      console.log(`Error in sweep.js/getTokens()`)
       throw err
     }
   }
