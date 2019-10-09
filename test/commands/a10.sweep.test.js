@@ -12,8 +12,6 @@ const Sweep = require("../../src/commands/sweep")
 const config = require("../../config")
 
 // Mocking data
-// const { bitboxMock } = require("../mocks/bitbox")
-// const testwallet = require("../mocks/testwallet.json")
 const mockData = require("../mocks/sweep-mocks")
 
 // Set default environment variables for unit tests.
@@ -124,6 +122,97 @@ describe("Sweep", () => {
     })
   })
 
+  describe("#getTokens()", () => {
+    it("should return empty arrays if address has no UTXOs.", async () => {
+      // Use mocked data if this is a unit test.
+      if (process.env.TEST === "unit")
+        sandbox.stub(sweep.BITBOX.Blockbook, "utxo").resolves([])
+
+      const flags = {
+        wif: "L2mMGwnLCqBGNHDpFEWXXq9i6unFgWoDvskyJbFvM1HUz7SnjeQm"
+      }
+
+      const result = await sweep.getTokens(flags)
+      // console.log(`result: ${JSON.stringify(result, null, 2)}`)
+
+      assert.hasAllKeys(result, ["bchUtxos", "tokenUtxos"])
+      assert.isEmpty(result.bchUtxos)
+      assert.isEmpty(result.tokenUtxos)
+    })
+
+    it("should throw an error if WIF has tokens but no BCH.", async () => {
+      try {
+        // Use mocked data if this is a unit test.
+        if (process.env.TEST === "unit") {
+          sandbox
+            .stub(sweep.BITBOX.Blockbook, "utxo")
+            .resolves(mockData.tokenOnlyUtxos)
+
+          sandbox
+            .stub(sweep.BITBOX.Util, "tokenUtxoDetails")
+            .resolves(mockData.tokenOnlyTokenInfo)
+        }
+
+        const flags = {
+          wif: "L2J7NSjdyosmxv7uoLMgZAhKGdpvfRXrmKN9tUHMfStmjo7ZnHZu"
+        }
+
+        await sweep.getTokens(flags)
+      } catch (err) {
+        // console.log(`test err: `, err)
+        assert.include(err.message, "Tokens found, but no BCH UTXOs found")
+      }
+    })
+
+    it("should return BCH utxos and no token UTXOs.", async () => {
+      // Use mocked data if this is a unit test.
+      if (process.env.TEST === "unit") {
+        sandbox
+          .stub(sweep.BITBOX.Blockbook, "utxo")
+          .resolves(mockData.bchOnlyUtxos)
+
+        sandbox
+          .stub(sweep.BITBOX.Util, "tokenUtxoDetails")
+          .resolves(mockData.bchOnlyTokenInfo)
+      }
+
+      const flags = {
+        wif: "KyC3XUbsYfvtR5dPDqSWUq2Z6sbW9fKCG3JB4bH1YVEE74nPUK9F"
+      }
+
+      const result = await sweep.getTokens(flags)
+      // console.log(`result: ${JSON.stringify(result, null, 2)}`)
+
+      assert.hasAllKeys(result, ["bchUtxos", "tokenUtxos"])
+      assert.isNotEmpty(result.bchUtxos)
+      assert.isEmpty(result.tokenUtxos)
+    })
+
+    it("should return both BCH and token UTXOs.", async () => {
+      // Use mocked data if this is a unit test.
+      if (process.env.TEST === "unit") {
+        sandbox
+          .stub(sweep.BITBOX.Blockbook, "utxo")
+          .resolves(mockData.bothUtxos)
+
+        sandbox
+          .stub(sweep.BITBOX.Util, "tokenUtxoDetails")
+          .resolves(mockData.bothTokenInfo)
+      }
+
+      const flags = {
+        wif: "KxQ615REGBjtbd1HVjT8of8dfzVte1xw3sURBp7ZQ8s4wXhmSWXC"
+      }
+
+      const result = await sweep.getTokens(flags)
+      // console.log(`result: ${JSON.stringify(result, null, 2)}`)
+
+      assert.hasAllKeys(result, ["bchUtxos", "tokenUtxos"])
+      assert.isNotEmpty(result.bchUtxos)
+      assert.isNotEmpty(result.tokenUtxos)
+    })
+  })
+
   describe("#sweep", () => {
     it("should throw an error if there are no funds found", async () => {
       // Mock the sendRawTransaction() function so the funds aren't actually swept.
@@ -158,7 +247,7 @@ describe("Sweep", () => {
       }
 
       const result = await sweep.sweep(flags)
-      //console.log(`result: ${JSON.stringify(result, null, 2)}`)
+      // console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
       assert.isString(result[0], "Returned value should be a txid string.")
     })

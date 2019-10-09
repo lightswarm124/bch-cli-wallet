@@ -211,6 +211,13 @@ class Sweep extends Command {
         else tokenUtxos.push(isTokenUtxo[i])
       }
 
+      // Throw error if no BCH to move tokens.
+      if (bchUtxos.length === 0 && tokenUtxos.length > 0) {
+        throw new Error(
+          `Tokens found, but no BCH UTXOs found. Add BCH to wallet to move tokens.`
+        )
+      }
+
       return { bchUtxos, tokenUtxos }
     } catch (err) {
       console.log(`Error in sweep.js/getTokens()`)
