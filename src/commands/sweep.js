@@ -86,10 +86,15 @@ class Sweep extends Command {
       const fromAddr = this.BITBOX.ECPair.toCashAddress(ecPair)
 
       // Get the UTXOs for that address.
-      const u = await this.BITBOX.Address.utxo(fromAddr)
+      let utxos = await this.BITBOX.Blockbook.utxo(fromAddr)
+      // console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
 
-      const utxos = u.utxos
-      //console.log(`utxos: ${JSON.stringify(u, null, 2)}`)
+      // Ensure all utxos have the satoshis property.
+      utxos = utxos.map(x => {
+        x.satoshis = Number(x.value)
+        return x
+      })
+      // console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
 
       // instance of transaction builder
       let transactionBuilder

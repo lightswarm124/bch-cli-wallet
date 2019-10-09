@@ -220,6 +220,10 @@ describe("Sweep", () => {
         .stub(sweep.BITBOX.RawTransactions, "sendRawTransaction")
         .resolves("txidString")
 
+      // Use mocked data if this is a unit test.
+      if (process.env.TEST === "unit")
+        sandbox.stub(sweep.BITBOX.Blockbook, "utxo").resolves([])
+
       const flags = {
         wif: "L287yGQj4DB4fbUKSV7DMHsyGQs1qh2E3EYJ21P88mXNKaFvmNWk",
         address: "bitcoincash:qqjes5sxwneywmnzqndvs6p3l9rp55a2ug0e6e6s0a"
@@ -240,6 +244,13 @@ describe("Sweep", () => {
       sandbox
         .stub(sweep.BITBOX.RawTransactions, "sendRawTransaction")
         .resolves("txidString")
+
+      // Use mocked data if this is a unit test.
+      if (process.env.TEST === "unit") {
+        sandbox
+          .stub(sweep.BITBOX.Blockbook, "utxo")
+          .resolves(mockData.bchOnlyUtxos)
+      }
 
       const flags = {
         wif: "KzGSsGMuFgtwkTyT3T8jwS1yUNov2j79D4qoP3SnBDdiAJBKK9Te",
