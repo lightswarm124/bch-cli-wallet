@@ -55,14 +55,14 @@ class SignMessage extends Command {
 
       // Display the signature to the user.
       this.log(`${ mySignature }`)
-      
+
     } catch (err) {
       if (err.message) console.log(err.message)
       else console.log(`Error in SignMessage.run: `, err)
     }
   }
 
-  
+
   async sign(filename, sendAddrIndex,signTheMessage) {
     try {
       //const filename = `${__dirname}/../../wallets/${name}.json`
@@ -74,18 +74,15 @@ class SignMessage extends Command {
       if (config.RESTAPI === "bitcoin.com")
         rootSeed = this.BITBOX.Mnemonic.toSeed(walletInfo.mnemonic)
       else rootSeed = await this.BITBOX.Mnemonic.toSeed(walletInfo.mnemonic)
-
       // master HDNode
       if (walletInfo.network === "testnet")
         var masterHDNode = this.BITBOX.HDNode.fromSeed(rootSeed, "testnet")
       else var masterHDNode = this.BITBOX.HDNode.fromSeed(rootSeed)
-
       // HDNode of BIP44 account
       const account = this.BITBOX.HDNode.derivePath(
         masterHDNode,
         `m/44'/${walletInfo.derivation}'/0'`
       )
-
       // derive an external change address HDNode
       const change = this.BITBOX.HDNode.derivePath(
         account,
@@ -94,20 +91,12 @@ class SignMessage extends Command {
 
       // get the cash address
       const pubKeyAddr= this.BITBOX.HDNode.toCashAddress(change)
-      //const legacy = BITBOX.HDNode.toLegacyAddress(change)
-      console.log(pubKeyAddr)
-
       // get the private key
       const privKeyWIF = this.BITBOX.HDNode.toWIF(change)
       //sign and verify
-      const  message = 'This is an example of a signed message.'
-
       const signature = BITBOX.BitcoinCash.signMessageWithPrivKey(privKeyWIF, signTheMessage)
-  
-      
-      
+
       return {
-        
         sign: signature
       }
     } catch (err) {
@@ -118,25 +107,25 @@ class SignMessage extends Command {
 
   // Validate the proper flags are passed in.
   validateFlags(flags) {
-    // Exit if wallet not specified.
+    // Exit if wallet is not specified.
     const name = flags.name
     if (!name || name === "")
       throw new Error(`You must specify a sign with the -n flag.`)
-      
-      const signTheMessage = flags.signTheMessage
+    // Exit if message is not specified.
+    const signTheMessage = flags.signTheMessage
     if (!signTheMessage|| signTheMessage === "")
       throw new Error(`You must specify a sign with the -s flag.`)
-      
-      const sendAddrIndex = flags.sendAddrIndex
+
+    // Exit if address index is not specified.
+    const sendAddrIndex = flags.sendAddrIndex
     if (isNaN(Number(sendAddrIndex)))
       throw new Error(`You must specify a send-to address index with the -i flag.`)
-
 
     return true
   }
 }
 
-SignMessage.description = `Sign message .`
+SignMessage.description = `Sign message`
 
 SignMessage.flags = {
   name: flags.string({ char: "n", description: "Name of wallet" }),
@@ -144,4 +133,4 @@ SignMessage.flags = {
   signTheMessage: flags.string({ char: "s", description: "Sign message" }),
 }
 
-module.exports =SignMessage
+module.exports = SignMessage
