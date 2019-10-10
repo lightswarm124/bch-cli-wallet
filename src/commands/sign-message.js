@@ -50,19 +50,18 @@ class SignMessage extends Command {
       const filename = `${__dirname}/../../wallets/${flags.name}.json`
 
       const signM = await this.sign(filename, flags.sendAddrIndex ,flags.signTheMessage)
-      console.log(signM)
       const mySignature = signM.sign
 
       // Display the signature to the user.
       this.log(`${ mySignature }`)
-      
+
     } catch (err) {
       if (err.message) console.log(err.message)
       else console.log(`Error in SignMessage.run: `, err)
     }
   }
 
-  
+
   async sign(filename, sendAddrIndex,signTheMessage) {
     try {
       //const filename = `${__dirname}/../../wallets/${name}.json`
@@ -95,19 +94,21 @@ class SignMessage extends Command {
       // get the cash address
       const pubKeyAddr= this.BITBOX.HDNode.toCashAddress(change)
       //const legacy = BITBOX.HDNode.toLegacyAddress(change)
-      console.log(pubKeyAddr)
+      console.log("Signing Address:", pubKeyAddr)
 
       // get the private key
       const privKeyWIF = this.BITBOX.HDNode.toWIF(change)
       //sign and verify
-      const  message = 'This is an example of a signed message.'
+      const payload = {
+        address: signTheMessage
+      }
+      console.log("Auth Payload Data:", payload)
+      const signature = BITBOX.BitcoinCash.signMessageWithPrivKey(
+        privKeyWIF,
+        JSON.stringify(payload)
+      )
 
-      const signature = BITBOX.BitcoinCash.signMessageWithPrivKey(privKeyWIF, signTheMessage)
-  
-      
-      
       return {
-        
         sign: signature
       }
     } catch (err) {
@@ -122,11 +123,11 @@ class SignMessage extends Command {
     const name = flags.name
     if (!name || name === "")
       throw new Error(`You must specify a sign with the -n flag.`)
-      
+
       const signTheMessage = flags.signTheMessage
     if (!signTheMessage|| signTheMessage === "")
       throw new Error(`You must specify a sign with the -s flag.`)
-      
+
       const sendAddrIndex = flags.sendAddrIndex
     if (isNaN(Number(sendAddrIndex)))
       throw new Error(`You must specify a send-to address index with the -i flag.`)
