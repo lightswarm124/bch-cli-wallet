@@ -10,6 +10,9 @@
 
   TO-DO:
   - Add support for testnet.
+  - Add support for multiple tokens. Right now if multiple tokens are saved to
+  the same paper wallet, only one of them will be accurently sent. The rest will
+  be burned.
 */
 
 "use strict"
@@ -17,6 +20,9 @@
 const { Command, flags } = require("@oclif/command")
 
 const config = require("../../config")
+
+const SendTokens = require("./send-tokens")
+const sendTokens = new SendTokens()
 
 // Mainnet by default.
 const BITBOX = new config.BCHLIB({ restURL: config.MAINNET_REST })
@@ -46,8 +52,8 @@ class Sweep extends Command {
 
       // Get UTXOs and analyze them for SLP tokens
       const { bchUtxos, tokenUtxos } = await this.getTokens(flags)
-      console.log(`bchUtxos: ${JSON.stringify(bchUtxos, null, 2)}`)
-      console.log(`tokenUtxos: ${JSON.stringify(tokenUtxos, null, 2)}`)
+      // console.log(`bchUtxos: ${JSON.stringify(bchUtxos, null, 2)}`)
+      // console.log(`tokenUtxos: ${JSON.stringify(tokenUtxos, null, 2)}`)
 
       // If there are tokens, summarize and display the data for each token found.
       if (tokenUtxos.length > 0) {
@@ -64,7 +70,12 @@ class Sweep extends Command {
       if (flags.balanceOnly || balance === 0) return
 
       console.log(`Sweeping...`)
-      const txid = await this.sweep(flags)
+      let hex
+
+      if (tokenUtxos.length === 0) hex = await this.sweepBCH(flags)
+      else hex = await this.sweepTokens(flags, bchUtxos, tokenUtxos)
+
+      const txid = await this.BITBOX.RawTransactions.sendRawTransaction([hex])
       console.log(`txid: ${txid}`)
     } catch (err) {
       if (err.message) console.log(err.message)
@@ -72,8 +83,134 @@ class Sweep extends Command {
     }
   }
 
+  async sweepTokens(flags, bchUtxos, tokenUtxos) {
+    try {
+      if (flags.testnet)
+        this.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
+
+      const wif = flags.wif
+      const toAddr = flags.address
+
+      const ecPair = this.BITBOX.ECPair.fromWIF(wif)
+
+      // const fromAddr = this.BITBOX.ECPair.toCashAddress(ecPair)
+
+      // instance of transaction builder
+      let transactionBuilder
+      if (flags.testnet)
+        transactionBuilder = new this.BITBOX.TransactionBuilder("testnet")
+      else transactionBuilder = new this.BITBOX.TransactionBuilder()
+
+      let originalAmount = 0
+
+      const allUtxos = bchUtxos.concat(tokenUtxos)
+      // console.log(`allUtxos: ${JSON.stringify(allUtxos, null, 2)}`)
+
+      // Loop through all UTXOs.
+      for (let i = 0; i < allUtxos.length; i++) {
+        const utxo = allUtxos[i]
+
+        originalAmount = originalAmount + utxo.satoshis
+
+        transactionBuilder.addInput(utxo.txid, utxo.vout)
+      }
+
+      if (originalAmount < 100) {
+        throw new Error(
+          `Not enough BCH to send. Send more BCH to the wallet to pay miner fees.`
+        )
+      }
+
+      // get byte count to calculate fee. paying 1 sat
+      // Note: This may not be totally accurate. Just guessing on the byteCount size.
+      // const byteCount = this.BITBOX.BitcoinCash.getByteCount(
+      //   { P2PKH: 3 },
+      //   { P2PKH: 5 }
+      // )
+      // //console.log(`byteCount: ${byteCount}`)
+      // const satoshisPerByte = 1.1
+      // const txFee = Math.floor(satoshisPerByte * byteCount)
+      // console.log(`txFee: ${txFee} satoshis\n`)
+      const txFee = 500
+
+      // amount to send back to the sending address. It's the original amount - 1 sat/byte for tx size
+      const remainder = originalAmount - txFee - 546
+      if (remainder < 1)
+        throw new Error(`Selected UTXO does not have enough satoshis`)
+      //console.log(`remainder: ${remainder}`)
+
+      // Tally up the quantity of tokens
+      let tokenQty = 0
+      for (let i = 0; i < tokenUtxos.length; i++)
+        tokenQty += tokenUtxos[i].tokenQty
+      // console.log(`tokenQty: ${tokenQty}`)
+
+      // Generate the OP_RETURN entry for an SLP SEND transaction.
+      //console.log(`Generating op-return.`)
+      const { script, outputs } = sendTokens.generateOpReturn(
+        tokenUtxos,
+        tokenQty
+      )
+      // console.log(`token outputs: ${outputs}`)
+
+      // Since we are sweeping all tokens from the WIF, there generateOpReturn()
+      // function should only compute 1 token output. If it returns 2, then there
+      // is something unexpected happening.
+      if (outputs > 1) {
+        throw new Error(
+          `token outputs are greater than 1 and shouldn't be. Unexpected error.`
+        )
+      }
+
+      // Add OP_RETURN as first output.
+      const data = BITBOX.Script.encode(script)
+      transactionBuilder.addOutput(data, 0)
+
+      // Send dust transaction representing tokens being sent.
+      transactionBuilder.addOutput(
+        this.BITBOX.Address.toLegacyAddress(toAddr),
+        546
+      )
+
+      // Last output: send remaining BCH
+      transactionBuilder.addOutput(
+        this.BITBOX.Address.toLegacyAddress(toAddr),
+        remainder
+      )
+      // console.log(`utxo: ${JSON.stringify(utxo, null, 2)}`)
+
+      // Sign each UTXO being consumed.
+      let redeemScript
+      for (let i = 0; i < allUtxos.length; i++) {
+        const thisUtxo = allUtxos[i]
+        // console.log(`thisUtxo: ${JSON.stringify(thisUtxo, null, 2)}`)
+
+        transactionBuilder.sign(
+          i,
+          ecPair,
+          redeemScript,
+          transactionBuilder.hashTypes.SIGHASH_ALL,
+          thisUtxo.satoshis
+        )
+      }
+
+      // build tx
+      const tx = transactionBuilder.build()
+
+      // output rawhex
+      const hex = tx.toHex()
+      console.log(`Transaction raw hex: `)
+      console.log(hex)
+
+      return hex
+    } catch (err) {
+      console.error(`Error in sweep.js/sweepTokens()`)
+      throw err
+    }
+  }
+
   // Sweep the private key and send funds to the address specified.
-  async sweep(flags) {
+  async sweepBCH(flags) {
     try {
       if (flags.testnet)
         this.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
@@ -113,8 +250,11 @@ class Sweep extends Command {
         transactionBuilder.addInput(utxo.txid, utxo.vout)
       }
 
-      if (originalAmount < 1)
-        throw new Error(`Original amount is zero. No BCH to send.`)
+      if (originalAmount < 546) {
+        throw new Error(
+          `Original amount less than the dust limit. Not enough BCH to send.`
+        )
+      }
 
       // get byte count to calculate fee. paying 1 sat/byte
       const byteCount = this.BITBOX.BitcoinCash.getByteCount(
@@ -151,9 +291,7 @@ class Sweep extends Command {
 
       // output rawhex
       const hex = tx.toHex()
-
-      // const txid = await this.BITBOX.RawTransactions.sendRawTransaction([hex])
-      // return txid
+      return hex
     } catch (err) {
       console.log(`Error in sweep.js/sweep()`)
       throw err

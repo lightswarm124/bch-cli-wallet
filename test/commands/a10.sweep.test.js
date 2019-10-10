@@ -213,13 +213,8 @@ describe("Sweep", () => {
     })
   })
 
-  describe("#sweep", () => {
+  describe("#sweepBCH", () => {
     it("should throw an error if there are no funds found", async () => {
-      // Mock the sendRawTransaction() function so the funds aren't actually swept.
-      sandbox
-        .stub(sweep.BITBOX.RawTransactions, "sendRawTransaction")
-        .resolves("txidString")
-
       // Use mocked data if this is a unit test.
       if (process.env.TEST === "unit")
         sandbox.stub(sweep.BITBOX.Blockbook, "utxo").resolves([])
@@ -229,22 +224,19 @@ describe("Sweep", () => {
         address: "bitcoincash:qqjes5sxwneywmnzqndvs6p3l9rp55a2ug0e6e6s0a"
       }
       try {
-        await sweep.sweep(flags)
+        await sweep.sweepBCH(flags)
         // console.log(`result: ${JSON.stringify(result, null, 2)}`)
       } catch (err) {
         // console.log(`error: ${err.message}`, err)
-        assert.include(err.message, "Original amount is zero")
+        assert.include(err.message, "Original amount less than the dust limit")
       }
 
       // assert.isString(result[0], "Returned value should be a txid string.")
     })
 
-    it("should sweep funds", async () => {
-      // Mock the sendRawTransaction() function so the funds aren't actually swept.
-      sandbox
-        .stub(sweep.BITBOX.RawTransactions, "sendRawTransaction")
-        .resolves("txidString")
+    // it should throw an error if UTXO balance is too small
 
+    it("should sweep funds", async () => {
       // Use mocked data if this is a unit test.
       if (process.env.TEST === "unit") {
         sandbox
@@ -257,10 +249,32 @@ describe("Sweep", () => {
         address: "bitcoincash:qqtc3vqfzz050jkvcfjvtzj392lf6wlqhun3fw66n9"
       }
 
-      const result = await sweep.sweep(flags)
+      const result = await sweep.sweepBCH(flags)
       // console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
-      assert.isString(result[0], "Returned value should be a txid string.")
+      assert.isString(result[0], "Returned value should be a hex tx string.")
+    })
+  })
+
+  describe("#sweepTokens", () => {
+    // it should throw an error if UTXO balance is too small
+
+    // it should throw an error if BCH remainder is less than zero.
+
+    // it should throw an error if token output is great than 1.
+
+    it("should sweep a key with tokens and bch", async () => {
+      const flags = {
+        wif: "L2cwnthdbVSfa5HVQcsj5FDjDR5qjthSgarCKv4yVYDXdB5E8nFL",
+        address: "bitcoincash:qzvdh3sutlvedu94aq6h73lyfacd0xqnvv7setgjlm"
+      }
+
+      const result = await sweep.sweepTokens(
+        flags,
+        mockData.bchUtxo,
+        mockData.tokenOnlyTokenInfo
+      )
+      console.log(`result: ${JSON.stringify(result, null, 2)}`)
     })
   })
 })

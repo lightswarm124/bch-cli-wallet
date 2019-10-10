@@ -96,6 +96,17 @@ const bothTokenInfo = [
   false
 ]
 
+const bchUtxo = [
+  {
+    txid: "71de89aeeb935311847696e410a7456eef807e8c3dc87d7a13b3da84baf4c485",
+    vout: 0,
+    value: "2000",
+    height: 603753,
+    confirmations: 145,
+    satoshis: 2000
+  }
+]
+
 module.exports = {
   mockBalance1,
   tokenOnlyUtxos,
@@ -103,5 +114,6 @@ module.exports = {
   bchOnlyUtxos,
   bchOnlyTokenInfo,
   bothUtxos,
-  bothTokenInfo
+  bothTokenInfo,
+  bchUtxo
 }
