@@ -23,7 +23,7 @@ if (process.env.RESTAPI && process.env.RESTAPI !== "")
 process.env.RESTAPI = RESTAPI
 
 const BCHJS = require("@chris.troutner/bch-js")
-const BITBOX = require("slp-sdk")
+// const BITBOX = require("slp-sdk")
 
 const config = {}
 
@@ -35,12 +35,12 @@ if (RESTAPI === "bchjs") {
 }
 
 // Use BITBOX and the bitcoin.com infrastructure.
-if (RESTAPI === "bitcoin.com") {
-  config.BCHLIB = BITBOX
-  config.MAINNET_REST = `https://rest.bitcoin.com/v2/`
-  config.TESTNET_REST = `https://trest.bitcoin.com/v2/`
-  config.RESTAPI = "bitcoin.com"
-}
+// if (RESTAPI === "bitcoin.com") {
+//   config.BCHLIB = BITBOX
+//   config.MAINNET_REST = `https://rest.bitcoin.com/v2/`
+//   config.TESTNET_REST = `https://trest.bitcoin.com/v2/`
+//   config.RESTAPI = "bitcoin.com"
+// }
 
 // Use bch-js but use it with the bitcoin.com infrastructure.
 if (RESTAPI === "rest.bitcoin.com") {

@@ -15,13 +15,8 @@
     "bignumber.js": "^9.0.0",
     "cli-table": "^0.3.1",
     "collect.js": "^4.16.6",
-    "orbit-db": "^0.21.0",
-    "prettier": "^1.15.3",
     "qrcode-terminal": "^0.12.0",
-    "request": "^2.88.0",
-    "request-promise": "^4.2.4",
-    "shelljs": "^0.8.2",
-    "slp-sdk": "^4.11.0"
+    "shelljs": "^0.8.2"
   },
   "devDependencies": {
     "@oclif/dev-cli": "^1.19.5",
@@ -35,6 +30,7 @@
     "mocha": "^6.1.4",
     "nock": "^11.1.0",
     "nyc": "^14.1.1",
+    "prettier": "^1.18.2",
     "semantic-release": "^15.13.20",
     "sinon": "^7.0.0"
   },
