@@ -257,11 +257,92 @@ describe("Sweep", () => {
   })
 
   describe("#sweepTokens", () => {
+    it("it should throw an error if bchUTXOs are not an array.", async () => {
+      try {
+        const flags = {
+          wif: "KwJuXZw6M9KJXts7CjqkiVTtuMyA6FvgyCnnXpYMB3k6Z9U3w6oS",
+          address: "bitcoincash:qp3mad7ys76tdxlsuf7dx9qjy3psxft8gu56fx8ydx"
+        }
+
+        await sweep.sweepTokens(flags, "bad data", mockData.twoTokens)
+      } catch (err) {
+        assert.include(
+          err.message,
+          "bchUtxos need to be an array with one UTXO"
+        )
+      }
+    })
+
+    it("it should throw an error if bchUTXOs is an empty array", async () => {
+      try {
+        const flags = {
+          wif: "KwJuXZw6M9KJXts7CjqkiVTtuMyA6FvgyCnnXpYMB3k6Z9U3w6oS",
+          address: "bitcoincash:qp3mad7ys76tdxlsuf7dx9qjy3psxft8gu56fx8ydx"
+        }
+
+        await sweep.sweepTokens(flags, [], mockData.twoTokens)
+      } catch (err) {
+        assert.include(
+          err.message,
+          "bchUtxos need to be an array with one UTXO"
+        )
+      }
+    })
+
+    it("it should throw an error if tokenUTXOs are not an array.", async () => {
+      try {
+        const flags = {
+          wif: "KwJuXZw6M9KJXts7CjqkiVTtuMyA6FvgyCnnXpYMB3k6Z9U3w6oS",
+          address: "bitcoincash:qp3mad7ys76tdxlsuf7dx9qjy3psxft8gu56fx8ydx"
+        }
+
+        await sweep.sweepTokens(flags, mockData.bchUtxo, "bad data")
+      } catch (err) {
+        assert.include(
+          err.message,
+          "tokenUtxos need to be an array with one UTXO"
+        )
+      }
+    })
+
+    it("it should throw an error if bchUTXOs is an empty array", async () => {
+      try {
+        const flags = {
+          wif: "KwJuXZw6M9KJXts7CjqkiVTtuMyA6FvgyCnnXpYMB3k6Z9U3w6oS",
+          address: "bitcoincash:qp3mad7ys76tdxlsuf7dx9qjy3psxft8gu56fx8ydx"
+        }
+
+        await sweep.sweepTokens(flags, mockData.bchUtxo, [])
+      } catch (err) {
+        assert.include(
+          err.message,
+          "tokenUtxos need to be an array with one UTXO"
+        )
+      }
+    })
+
+    it("it should throw an error if more than one token class is detected.", async () => {
+      try {
+        const flags = {
+          wif: "KwJuXZw6M9KJXts7CjqkiVTtuMyA6FvgyCnnXpYMB3k6Z9U3w6oS",
+          address: "bitcoincash:qp3mad7ys76tdxlsuf7dx9qjy3psxft8gu56fx8ydx"
+        }
+
+        await sweep.sweepTokens(flags, mockData.bchUtxo, mockData.twoTokens)
+      } catch (err) {
+        // console.log(err)
+        assert.include(err.message, "Multiple token classes detected")
+      }
+    })
+
     // it should throw an error if UTXO balance is too small
+    // Note: Not possible.
 
     // it should throw an error if BCH remainder is less than zero.
+    // Note: Not possible.
 
     // it should throw an error if token output is great than 1.
+    // Note: not possible?
 
     it("should sweep a key with tokens and bch", async () => {
       const flags = {
@@ -274,7 +355,9 @@ describe("Sweep", () => {
         mockData.bchUtxo,
         mockData.tokenOnlyTokenInfo
       )
-      console.log(`result: ${JSON.stringify(result, null, 2)}`)
+      // console.log(`result: ${JSON.stringify(result, null, 2)}`)
+
+      assert.isString(result)
     })
   })
 })

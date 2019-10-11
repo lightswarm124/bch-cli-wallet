@@ -53,7 +53,7 @@ class Sweep extends Command {
       // Get UTXOs and analyze them for SLP tokens
       const { bchUtxos, tokenUtxos } = await this.getTokens(flags)
       // console.log(`bchUtxos: ${JSON.stringify(bchUtxos, null, 2)}`)
-      // console.log(`tokenUtxos: ${JSON.stringify(tokenUtxos, null, 2)}`)
+      console.log(`tokenUtxos: ${JSON.stringify(tokenUtxos, null, 2)}`)
 
       // If there are tokens, summarize and display the data for each token found.
       if (tokenUtxos.length > 0) {
@@ -85,8 +85,24 @@ class Sweep extends Command {
 
   async sweepTokens(flags, bchUtxos, tokenUtxos) {
     try {
+      // Input validation
+      if (!Array.isArray(bchUtxos) || bchUtxos.length === 0)
+        throw new Error(`bchUtxos need to be an array with one UTXO.`)
+      if (!Array.isArray(tokenUtxos) || tokenUtxos.length === 0)
+        throw new Error(`tokenUtxos need to be an array with one UTXO.`)
+
       if (flags.testnet)
         this.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
+
+      // Ensure there is only one class of token in the wallet. Throw an error if
+      // there is more than one.
+      const tokenId = tokenUtxos[0].tokenId
+      const otherTokens = tokenUtxos.filter(x => x.tokenId !== tokenId)
+      if (otherTokens.length > 0) {
+        throw new Error(
+          `Multiple token classes detected. This function only supports a single class of token.`
+        )
+      }
 
       const wif = flags.wif
       const toAddr = flags.address
@@ -101,12 +117,12 @@ class Sweep extends Command {
         transactionBuilder = new this.BITBOX.TransactionBuilder("testnet")
       else transactionBuilder = new this.BITBOX.TransactionBuilder()
 
-      let originalAmount = 0
-
+      // Combine all the UTXOs into a single array.
       const allUtxos = bchUtxos.concat(tokenUtxos)
       // console.log(`allUtxos: ${JSON.stringify(allUtxos, null, 2)}`)
 
       // Loop through all UTXOs.
+      let originalAmount = 0
       for (let i = 0; i < allUtxos.length; i++) {
         const utxo = allUtxos[i]
 
@@ -115,7 +131,7 @@ class Sweep extends Command {
         transactionBuilder.addInput(utxo.txid, utxo.vout)
       }
 
-      if (originalAmount < 100) {
+      if (originalAmount < 300) {
         throw new Error(
           `Not enough BCH to send. Send more BCH to the wallet to pay miner fees.`
         )
@@ -199,8 +215,8 @@ class Sweep extends Command {
 
       // output rawhex
       const hex = tx.toHex()
-      console.log(`Transaction raw hex: `)
-      console.log(hex)
+      // console.log(`Transaction raw hex: `)
+      // console.log(hex)
 
       return hex
     } catch (err) {
@@ -293,7 +309,7 @@ class Sweep extends Command {
       const hex = tx.toHex()
       return hex
     } catch (err) {
-      console.log(`Error in sweep.js/sweep()`)
+      console.log(`Error in sweep.js/sweepBCH()`)
       throw err
     }
   }

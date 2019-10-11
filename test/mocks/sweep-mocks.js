@@ -56,6 +56,17 @@ const bchOnlyUtxos = [
   }
 ]
 
+const bchSmallUtxos = [
+  {
+    txid: "53c9ee6e5ecec2787d2edfeaf0b192b45a937d5a4b1eaa715545eeb3c5c67ede",
+    vout: 0,
+    value: "550",
+    height: 603853,
+    confirmations: 17,
+    satoshis: 550
+  }
+]
+
 const bchOnlyTokenInfo = [false]
 
 const bothUtxos = [
@@ -107,6 +118,42 @@ const bchUtxo = [
   }
 ]
 
+const twoTokens = [
+  {
+    txid: "410fa835c5409497954a5819f7eca577d429fc1606eb29107125c2372286bf1b",
+    vout: 1,
+    value: "546",
+    confirmations: 0,
+    satoshis: 546,
+    utxoType: "token",
+    transactionType: "send",
+    tokenId: "497291b8a1dfe69c8daea50677a3d31a5ef0e9484d8bebb610dac64bbc202fb7",
+    tokenTicker: "TOK-CH",
+    tokenName: "TokyoCash",
+    tokenDocumentUrl: "",
+    tokenDocumentHash: "",
+    decimals: 8,
+    tokenQty: 1
+  },
+  {
+    txid: "551d9e9ee4a40a3b42a96dde8a41a5b48c849f0ea72ee525b839f1f1140575cb",
+    vout: 1,
+    value: "546",
+    height: 603753,
+    confirmations: 283,
+    satoshis: 546,
+    utxoType: "token",
+    transactionType: "send",
+    tokenId: "dd84ca78db4d617221b58eabc6667af8fe2f7eadbfcc213d35be9f1b419beb8d",
+    tokenTicker: "TAP",
+    tokenName: "Thoughts and Prayers",
+    tokenDocumentUrl: "",
+    tokenDocumentHash: "",
+    decimals: 0,
+    tokenQty: 1
+  }
+]
+
 module.exports = {
   mockBalance1,
   tokenOnlyUtxos,
@@ -115,5 +162,7 @@ module.exports = {
   bchOnlyTokenInfo,
   bothUtxos,
   bothTokenInfo,
-  bchUtxo
+  bchUtxo,
+  twoTokens,
+  bchSmallUtxos
 }
