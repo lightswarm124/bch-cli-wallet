@@ -408,6 +408,8 @@ class Sweep extends Command {
 Sweep.description = `Sweep a private key
 ...
 Sweeps a private key in WIF format.
+Supports SLP token sweeping, but only one token class at a time. It will throw
+an error if a WIF contains more than one class of token.
 `
 
 Sweep.flags = {
