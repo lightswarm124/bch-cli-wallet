@@ -53,7 +53,7 @@ class Sweep extends Command {
       // Get UTXOs and analyze them for SLP tokens
       const { bchUtxos, tokenUtxos } = await this.getTokens(flags)
       // console.log(`bchUtxos: ${JSON.stringify(bchUtxos, null, 2)}`)
-      console.log(`tokenUtxos: ${JSON.stringify(tokenUtxos, null, 2)}`)
+      // console.log(`tokenUtxos: ${JSON.stringify(tokenUtxos, null, 2)}`)
 
       // If there are tokens, summarize and display the data for each token found.
       if (tokenUtxos.length > 0) {
