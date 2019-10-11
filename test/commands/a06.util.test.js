@@ -40,7 +40,7 @@ describe("#util.js", () => {
           .resolves(utilMocks.mockSpentUtxo)
       }
 
-      const utxos = await appUtils.getUTXOs(utilMocks.mockWallet)
+      const utxos = await appUtils.getUTXOs(utilMocks.mainnetWallet)
       // console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
 
       assert.isArray(utxos, "Expect array of utxos")

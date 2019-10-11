@@ -51,6 +51,30 @@ const mockWallet = {
   SLPUtxos: []
 }
 
+const mainnetWallet = {
+  network: "mainnet",
+  mnemonic:
+    "shaft jelly okay little immense grant poet east there urge exhaust swarm",
+  derivation: 245,
+  rootAddress: "bitcoincash:qr7rzs9jmng7y2j0v9dh3acr08p54hhw9vxhne9dew",
+  balance: 0.00001,
+  nextAddress: 2,
+  hasBalance: [
+    {
+      index: 1,
+      balance: 0.00001,
+      balanceSat: 1000,
+      unconfirmedBalance: 0,
+      unconfirmedBalanceSat: 0,
+      cashAddress: "bitcoincash:qzxj70q8xkw0sjkj526uc4k08g36sldldygxe7pgn4"
+    }
+  ],
+  name: "temp",
+  balanceConfirmed: 0.00001,
+  balanceUnconfirmed: 0,
+  SLPUtxos: []
+}
+
 const mockTxOut = {
   bestblock: "000000000000000001e36f898d6dcd941b1de4202466d72843209277cc052bbc",
   confirmations: 11,
@@ -70,5 +94,6 @@ module.exports = {
   mockSpentUtxo,
   mockUnspentUtxo,
   mockWallet,
+  mainnetWallet,
   mockTxOut
 }
