@@ -42,7 +42,8 @@
     "/npm-shrinkwrap.json",
     "/oclif.manifest.json",
     "/src",
-    "/wallets"
+    "/wallets",
+    "/config"
   ],
   "homepage": "https://github.com/christroutner/bch-cli-wallet",
   "keywords": [
