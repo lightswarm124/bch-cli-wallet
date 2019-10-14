@@ -216,6 +216,8 @@ class Send extends Command {
 
       // The UTXO must be greater than or equal to the send amount.
       if (thisUTXO.satoshis >= total) {
+        // console.log(`thisUtxo: ${JSON.stringify(thisUTXO, null, 2)}`)
+
         // Skip if the UTXO is invalid
         const isValid = await this.appUtils.isValidUtxo(thisUTXO)
         if (!isValid) {

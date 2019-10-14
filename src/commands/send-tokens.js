@@ -83,9 +83,17 @@ class SendTokens extends Command {
       const utxos = await this.getBchUtxos(walletInfo)
       //console.log(`send utxos: ${util.inspect(utxos)}`)
 
+      // Instatiate the Send class so this function can reuse its selectUTXO() code.
+      const send = new Send()
+      if (walletInfo.network === "testnet") {
+        send.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
+        send.appUtils.BITBOX = new config.BCHLIB({
+          restURL: config.TESTNET_REST
+        })
+      }
+
       // Select optimal UTXO
       // TODO: Figure out the appropriate amount of BCH to use in selectUTXO()
-      const send = new Send()
       const utxo = await send.selectUTXO(0.000015, utxos)
       // 1500 satoshis used until a more accurate calculation can be devised.
       //console.log(`selected utxo: ${util.inspect(utxo)}`)
