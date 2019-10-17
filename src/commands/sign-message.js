@@ -50,7 +50,7 @@ class SignMessage extends Command {
       const filename = `${__dirname}/../../wallets/${flags.name}.json`
 
       const signM = await this.sign(filename, flags.sendAddrIndex ,flags.signTheMessage)
-      console.log(signM)
+      //console.log(signM)
       const mySignature = signM.sign
 
       // Display the signature to the user.
@@ -95,8 +95,8 @@ class SignMessage extends Command {
       const privKeyWIF = this.BITBOX.HDNode.toWIF(change)
       //sign and verify
       const signature = BITBOX.BitcoinCash.signMessageWithPrivKey(privKeyWIF, signTheMessage)
-
-      return {
+        
+      return {      
         sign: signature
       }
     } catch (err) {
@@ -104,24 +104,24 @@ class SignMessage extends Command {
       throw err
     }
   }
+ 
 
   // Validate the proper flags are passed in.
   validateFlags(flags) {
     // Exit if wallet is not specified.
     const name = flags.name
     if (!name || name === "")
-      throw new Error(`You must specify a sign with the -n flag.`)
-    // Exit if message is not specified.
+      throw new Error(`You must specify a wallet with the -n flag.`)
+      
+    const sendAddrIndex = flags.sendAddrIndex
+    if (isNaN(Number(sendAddrIndex)))
+      throw new Error(`You must specify a address index with the -i flag.`) 
+     
     const signTheMessage = flags.signTheMessage
     if (!signTheMessage|| signTheMessage === "")
       throw new Error(`You must specify a sign with the -s flag.`)
-
-    // Exit if address index is not specified.
-    const sendAddrIndex = flags.sendAddrIndex
-    if (isNaN(Number(sendAddrIndex)))
-      throw new Error(`You must specify a send-to address index with the -i flag.`)
-
-    return true
+      
+     return true
   }
 }
 
