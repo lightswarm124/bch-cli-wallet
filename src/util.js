@@ -32,6 +32,10 @@ class AppUtils {
   // Will discard (not return) UTXOs that belong to SLP tokens.
   async getUTXOs(walletInfo) {
     try {
+      // Determine if this is a testnet wallet or a mainnet wallet.
+      if (walletInfo.network === "testnet")
+        this.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
+
       const retArray = []
 
       // Loop through each address that has a balance.
@@ -39,11 +43,12 @@ class AppUtils {
         const thisAddr = walletInfo.hasBalance[i].cashAddress
 
         // Get the UTXOs for that address.
-        const u = await this.BITBOX.Address.utxo(thisAddr)
+        // const u = await this.BITBOX.Address.utxo(thisAddr)
         //console.log(`u for ${thisAddr}: ${JSON.stringify(u, null, 2)}`)
 
-        const utxos = u.utxos
-        //console.log(`utxos for ${thisAddr}: ${util.inspect(utxos)}`)
+        // const utxos = u.utxos
+        const utxos = await this.BITBOX.Blockbook.utxo(thisAddr)
+        // console.log(`utxos for ${thisAddr}: ${JSON.stringify(utxos, null, 2)}`)
 
         // Loop through each UXTO returned
         for (var j = 0; j < utxos.length; j++) {
@@ -72,7 +77,7 @@ class AppUtils {
           // Add the UTXO to the array if it has at least one confirmation.
           // Dev Note: Enable the line below if you want a more conservative
           // approach of wanting a confirmation for each UTXO before spending
-          // it.
+          // it. Most wallets spend unconfirmed UTXOs.
           //if (thisUTXO.confirmations > 0) retArray.push(thisUTXO)
           // zero-conf OK.
           retArray.push(thisUTXO)
@@ -117,6 +122,14 @@ class AppUtils {
   // Generate a change address from a Mnemonic of a private key.
   async changeAddrFromMnemonic(walletInfo, index) {
     try {
+      if (!walletInfo.derivation)
+        throw new Error(`walletInfo must have integer derivation value.`)
+      // console.log(`walletInfo: ${JSON.stringify(walletInfo, null, 2)}`)
+
+      // console.log(`index: ${index}`)
+      if (!index && index !== 0)
+        throw new Error(`index must be a non-negative integer.`)
+
       // root seed buffer
       let rootSeed
       if (config.RESTAPI === "bitcoin.com")
@@ -129,6 +142,7 @@ class AppUtils {
       else var masterHDNode = this.BITBOX.HDNode.fromSeed(rootSeed)
 
       // HDNode of BIP44 account
+      // console.log(`derivation path: m/44'/${walletInfo.derivation}'/0'`)
       const account = this.BITBOX.HDNode.derivePath(
         masterHDNode,
         `m/44'/${walletInfo.derivation}'/0'`
@@ -185,6 +199,29 @@ class AppUtils {
     tempNum = tempNum / 100000000
 
     return tempNum
+  }
+
+  // Call the full node to validate that UTXO has not been spent.
+  // Returns true if UTXO is unspent.
+  // Returns false if UTXO is spent.
+  async isValidUtxo(utxo) {
+    try {
+      // Input validation.
+      if (!utxo.txid) throw new Error(`utxo does not have a txid property`)
+      if (!utxo.vout && utxo.vout !== 0)
+        throw new Error(`utxo does not have a vout property`)
+
+      // console.log(`utxo: ${JSON.stringify(utxo, null, 2)}`)
+
+      const txout = await this.BITBOX.Blockchain.getTxOut(utxo.txid, utxo.vout)
+      // console.log(`txout: ${JSON.stringify(txout, null, 2)}`)
+
+      if (txout === null) return false
+      return true
+    } catch (err) {
+      console.error("Error in util.js/validateUtxo()")
+      throw err
+    }
   }
 }
 

@@ -63,8 +63,6 @@ class SendTokens extends Command {
       let walletInfo = appUtils.openWallet(filename)
       walletInfo.name = name
 
-      console.log(`Existing balance: ${walletInfo.balance} BCH`)
-
       // Determine if this is a testnet wallet or a mainnet wallet.
       if (walletInfo.network === "testnet") {
         this.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
@@ -74,7 +72,7 @@ class SendTokens extends Command {
       // Update balances before sending.
       const updateBalances = new UpdateBalances()
       updateBalances.BITBOX = this.BITBOX
-      walletInfo = await updateBalances.updateBalances(filename, walletInfo)
+      walletInfo = await updateBalances.updateBalances(flags)
       //console.log(`walletInfo: ${JSON.stringify(walletInfo, null, 2)}`)
 
       // Get a list of token UTXOs from the wallet for this token.
@@ -85,9 +83,17 @@ class SendTokens extends Command {
       const utxos = await this.getBchUtxos(walletInfo)
       //console.log(`send utxos: ${util.inspect(utxos)}`)
 
+      // Instatiate the Send class so this function can reuse its selectUTXO() code.
+      const send = new Send()
+      if (walletInfo.network === "testnet") {
+        send.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
+        send.appUtils.BITBOX = new config.BCHLIB({
+          restURL: config.TESTNET_REST
+        })
+      }
+
       // Select optimal UTXO
       // TODO: Figure out the appropriate amount of BCH to use in selectUTXO()
-      const send = new Send()
       const utxo = await send.selectUTXO(0.000015, utxos)
       // 1500 satoshis used until a more accurate calculation can be devised.
       //console.log(`selected utxo: ${util.inspect(utxo)}`)
@@ -115,13 +121,14 @@ class SendTokens extends Command {
         walletInfo,
         tokenUtxos
       )
+      // console.log(`hex: ${hex}`)
 
       const txid = await appUtils.broadcastTx(hex)
       appUtils.displayTxid(txid, walletInfo.network)
     } catch (err) {
       //if (err.message) console.log(err.message)
       //else console.log(`Error in .run: `, err)
-      console.log(`Error in send.js/run(): `, err)
+      console.log(`Error in send-tokens.js/run(): `, err)
     }
   }
 
@@ -204,6 +211,7 @@ class SendTokens extends Command {
         this.BITBOX.Address.toLegacyAddress(changeAddress),
         remainder
       )
+      // console.log(`utxo: ${JSON.stringify(utxo, null, 2)}`)
 
       // Generate a keypair from the change address.
       const change = await appUtils.changeAddrFromMnemonic(
@@ -226,6 +234,7 @@ class SendTokens extends Command {
       // Sign each token UTXO being consumed.
       for (let i = 0; i < tokenUtxos.length; i++) {
         const thisUtxo = tokenUtxos[i]
+        // console.log(`thisUtxo: ${JSON.stringify(thisUtxo, null, 2)}`)
 
         // Generate a keypair to sign the SLP UTXO.
         const slpChangeAddr = await appUtils.changeAddrFromMnemonic(

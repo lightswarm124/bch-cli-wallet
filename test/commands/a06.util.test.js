@@ -12,34 +12,17 @@ const AppUtils = require("../../src/util")
 const config = require("../../config")
 
 // Mocking data
-const { bitboxMock } = require("../mocks/bitbox")
-const testwallet = require("../mocks/testwallet.json")
 const utilMocks = require("../mocks/util")
-
-// Inspect utility used for debugging.
-const util = require("util")
-util.inspect.defaultOptions = {
-  showHidden: true,
-  colors: true,
-  depth: 1
-}
 
 // Set default environment variables for unit tests.
 if (!process.env.TEST) process.env.TEST = "unit"
 
 describe("#util.js", () => {
-  let BITBOX
-  let mockedWallet
   let appUtils
   let sandbox
 
   beforeEach(() => {
-    // By default, use the mocking library instead of live calls.
-    BITBOX = bitboxMock
-    mockedWallet = Object.assign({}, testwallet) // Clone the testwallet
-
     appUtils = new AppUtils()
-    appUtils.BITBOX = BITBOX
 
     sandbox = sinon.createSandbox()
   })
@@ -50,31 +33,26 @@ describe("#util.js", () => {
 
   describe("#getUTXOs", () => {
     it("should get all UTXOs in wallet", async () => {
-      // Use the real library if this is not a unit test.
-      //if (process.env.TEST !== "unit") appUtils.BITBOX = new BB(REST_URL)
-      appUtils.BITBOX = new config.BCHLIB({
-        restURL: config.TESTNET_REST
-      })
-
+      // Unit test mocking.
       if (process.env.TEST === "unit") {
         sandbox
-          .stub(appUtils.BITBOX.Address, "utxo")
-          .resolves(utilMocks.mockUtxo)
+          .stub(appUtils.BITBOX.Blockbook, "utxo")
+          .resolves(utilMocks.mockSpentUtxo)
       }
 
-      const utxos = await appUtils.getUTXOs(mockedWallet)
-      //console.log(`utxos: ${util.inspect(utxos)}`)
+      const utxos = await appUtils.getUTXOs(utilMocks.mainnetWallet)
+      // console.log(`utxos: ${JSON.stringify(utxos, null, 2)}`)
 
       assert.isArray(utxos, "Expect array of utxos")
       if (utxos.length > 0) {
         assert.hasAllKeys(utxos[0], [
           "txid",
           "vout",
-          "amount",
           "satoshis",
           "height",
           "confirmations",
-          "hdIndex"
+          "hdIndex",
+          "value"
         ])
       }
     })
@@ -94,7 +72,7 @@ describe("#util.js", () => {
     it("should save a wallet without error", async () => {
       const filename = `${__dirname}/../../wallets/test123.json`
 
-      await appUtils.saveWallet(filename, mockedWallet)
+      await appUtils.saveWallet(filename, utilMocks.mockWallet)
     })
   })
 
@@ -104,11 +82,57 @@ describe("#util.js", () => {
         restURL: config.TESTNET_REST
       })
 
-      const result = await appUtils.changeAddrFromMnemonic(mockedWallet, 0)
+      const result = await appUtils.changeAddrFromMnemonic(
+        utilMocks.mockWallet,
+        0
+      )
       //console.log(`result: ${util.inspect(result)}`)
       //console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
       assert.hasAnyKeys(result, ["keyPair", "chainCode", "index"])
+    })
+  })
+
+  describe("#validateUtxo", () => {
+    it("should throw error on empty input", async () => {
+      try {
+        await appUtils.isValidUtxo({})
+      } catch (err) {
+        assert.include(err.message, "utxo does not have a txid property")
+      }
+    })
+
+    it("should throw error on malformed utxo", async () => {
+      try {
+        await appUtils.isValidUtxo({ txid: "sometxid" })
+      } catch (err) {
+        assert.include(err.message, "utxo does not have a vout property")
+      }
+    })
+
+    it("should return false for a spent UTXO", async () => {
+      // Unit test mocking.
+      if (process.env.TEST === "unit")
+        sandbox.stub(appUtils.BITBOX.Blockchain, "getTxOut").resolves(null)
+
+      const result = await appUtils.isValidUtxo(utilMocks.mockSpentUtxo[0])
+      // console.log(`result: ${JSON.stringify(result, null, 2)}`)
+
+      assert.equal(result, false)
+    })
+
+    it("should return true for an unspent UTXO", async () => {
+      // Unit test mocking.
+      if (process.env.TEST === "unit") {
+        sandbox
+          .stub(appUtils.BITBOX.Blockchain, "getTxOut")
+          .resolves(utilMocks.mockTxOut)
+      }
+
+      const result = await appUtils.isValidUtxo(utilMocks.mockUnspentUtxo[0])
+      // console.log(`result: ${JSON.stringify(result, null, 2)}`)
+
+      assert.equal(result, true)
     })
   })
 })

@@ -195,7 +195,7 @@ OPTIONS
   --all  see all commands in CLI
 ```
 
-_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.2.0/src/commands/help.ts)_
+_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.2.1/src/commands/help.ts)_
 
 ## `slp-cli-wallet list-wallets`
 
@@ -295,6 +295,8 @@ OPTIONS
 DESCRIPTION
   ...
   Sweeps a private key in WIF format.
+  Supports SLP token sweeping, but only one token class at a time. It will throw
+  an error if a WIF contains more than one class of token.
 ```
 
 _See code: [src/commands/sweep.js](https://github.com/christroutner/bch-cli-wallet/blob/v1.5.0/src/commands/sweep.js)_
