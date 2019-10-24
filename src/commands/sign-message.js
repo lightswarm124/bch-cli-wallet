@@ -95,8 +95,8 @@ class SignMessage extends Command {
       const privKeyWIF = this.BITBOX.HDNode.toWIF(change)
       //sign and verify
       const signature = BITBOX.BitcoinCash.signMessageWithPrivKey(privKeyWIF, signTheMessage)
-        
-      return {      
+
+      return {
         sign: signature
       }
     } catch (err) {
@@ -104,7 +104,7 @@ class SignMessage extends Command {
       throw err
     }
   }
- 
+
 
   // Validate the proper flags are passed in.
   validateFlags(flags) {
@@ -112,15 +112,15 @@ class SignMessage extends Command {
     const name = flags.name
     if (!name || name === "")
       throw new Error(`You must specify a wallet with the -n flag.`)
-      
+
     const sendAddrIndex = flags.sendAddrIndex
     if (isNaN(Number(sendAddrIndex)))
-      throw new Error(`You must specify a address index with the -i flag.`) 
-     
+      throw new Error(`You must specify a address index with the -i flag.`)
+
     const signTheMessage = flags.signTheMessage
     if (!signTheMessage|| signTheMessage === "")
       throw new Error(`You must specify a sign with the -s flag.`)
-      
+
      return true
   }
 }

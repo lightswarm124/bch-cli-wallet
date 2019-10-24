@@ -93,7 +93,8 @@ class CreateWallet extends Command {
 
       // Initialize other data.
       walletData.balance = 0
-      walletData.nextAddress = 1
+      // Default index from 1 to 0 in order to get index 0's address set
+      walletData.nextAddress = 0
       walletData.hasBalance = []
 
       // Write out the basic information into a json file for other apps to use.
