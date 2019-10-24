@@ -37,7 +37,7 @@ util.inspect.defaultOptions = { depth: 2 }
 
 const { Command, flags } = require("@oclif/command")
 
-class CreateTokens extends Command {
+class GenesisTokens extends Command {
   constructor(argv, config) {
     super(argv, config)
     //_this = this
@@ -48,58 +48,64 @@ class CreateTokens extends Command {
 
   async run() {
     try {
-      const { flags } = this.parse(CreateTokens)
+      const { flags } = this.parse(GenesisTokens)
 
       // Ensure flags meet qualifiying critieria.
       this.validateFlags(flags)
 
       const name = flags.name // Name of the wallet.
-      const decimals = flags.decimals // Number of decimals.
+/*      const decimals = flags.decimals // Number of decimals.
       const documentURL = flags.documentURL // Document URL link.
       const genesisAddr = flags.genesisAddr // The address to send to.
       const batonAddr = flags.batonAddr // The address to mint more tokens.
       const qty = flags.qty // Amount to send in BCH.
       const ticker = flags.ticker // Token ticker name
       const tokenName = flags.tokenName // Token name
-
+*/
       // Open the wallet data file.
       const filename = `${__dirname}/../../wallets/${name}.json`
       let walletInfo = appUtils.openWallet(filename)
       walletInfo.name = name
 
-      console.log(`Existing balance: ${walletInfo.balance} BCH`)
+//      console.log(`Existing balance: ${walletInfo.balance} BCH`)
 
       // Determine if this is a testnet wallet or a mainnet wallet.
       if (walletInfo.network === "testnet") {
         this.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
         appUtils.BITBOX = this.BITBOX
       }
-
       // Update balances before sending.
       const updateBalances = new UpdateBalances()
       updateBalances.BITBOX = this.BITBOX
-      walletInfo = await updateBalances.updateBalances(filename, walletInfo)
-      //console.log(`walletInfo: ${JSON.stringify(walletInfo, null, 2)}`)
+      walletInfo = await updateBalances.updateBalances(flags)
+//      console.log(`walletInfo: ${JSON.stringify(walletInfo, null, 2)}`)
 
       // Get a list of BCH UTXOs in this wallet that can be used to pay for
       // the transaction fee.
       const utxos = await this.getBchUtxos(walletInfo)
-      //console.log(`send utxos: ${util.inspect(utxos)}`)
+//      console.log(`send utxos: ${util.inspect(utxos)}`)
 
       // Select optimal UTXO
       // TODO: Figure out the appropriate amount of BCH to use in selectUTXO()
       const send = new Send()
+      if (walletInfo.network === "testnet") {
+        send.BITBOX = new config.BCHLIB({ restURL: config.TESTNET_REST })
+        send.appUtils.BITBOX = new config.BCHLIB({
+          restURL: config.TESTNET_REST
+        })
+      }
       const utxo = await send.selectUTXO(0.000015, utxos)
       // 1500 satoshis used until a more accurate calculation can be devised.
-      //console.log(`selected utxo: ${util.inspect(utxo)}`)
+      console.log(`selected utxo: ${util.inspect(utxo)}`)
 
       // Exit if there is no UTXO big enough to fulfill the transaction.
-      if (!utxo.amount) {
+/*      if (!utxo.amount) {
         this.log(
           `Could not find a UTXO big enough for this transaction. More BCH needed.`
         )
         return
       }
+      //this.log(utxo.amount)
 
       // Generate a new address, for sending change to.
       const getAddress = new GetAddress()
@@ -107,18 +113,18 @@ class CreateTokens extends Command {
       const changeAddress = await getAddress.getAddress(filename)
       //console.log(`changeAddress: ${changeAddress}`)
 
-      // Send the token, transfer change to the new address
-      const hex = await this.sendTokens(
+*/
+      // Create the token, transfer change to the new address
+/*      const hex = await this.genesisTokens(
         utxo,
         qty,
         changeAddress,
         genesisAddr,
         walletInfo,
-        tokenUtxos
       )
-
       const txid = await appUtils.broadcastTx(hex)
       appUtils.displayTxid(txid, walletInfo.network)
+*/
     } catch (err) {
       //if (err.message) console.log(err.message)
       //else console.log(`Error in .run: `, err)
@@ -127,7 +133,7 @@ class CreateTokens extends Command {
   }
 
   // Generates the SLP transaction in hex format, ready to broadcast to network.
-  async sendTokens(
+  async genesisTokens(
     utxo,
     qty,
     changeAddress,
@@ -175,7 +181,7 @@ class CreateTokens extends Command {
         throw new Error(`Selected UTXO does not have enough satoshis`)
       //console.log(`remainder: ${remainder}`)
 
-      // Generate the OP_RETURN entry for an SLP SEND transaction.
+      // Generate the OP_RETURN entry for an SLP GENESIS transaction.
       //console.log(`Generating op-return.`)
       const { script, outputs } = this.generateOpReturn(tokenUtxos, qty)
       //console.log(`script: ${JSON.stringify(script, null, 2)}`)
@@ -256,7 +262,7 @@ class CreateTokens extends Command {
 
       return hex
     } catch (err) {
-      console.log(`Error in sendTokens()`)
+      console.log(`Error in genesisTokens()`)
       throw err
     }
   }
@@ -283,61 +289,6 @@ class CreateTokens extends Command {
   // It's assumed all elements in the tokenUtxos array belong to the same token.
   generateOpReturn(decimals, documentURL, genesisAddr, batonAddr, createQty, ticker, tokenName) {
     try {
-      const decimals = tokenUtxos[0].decimals
-
-      // Calculate the total amount of tokens owned by the wallet.
-      let totalTokens = 0
-      for (let i = 0; i < tokenUtxos.length; i++)
-        totalTokens += tokenUtxos[i].tokenQty
-
-      const change = totalTokens - createQty
-
-      let script
-      let outputs = 1
-
-      // The normal case, when there is token change to return to sender.
-      if (change > 0) {
-        outputs = 2
-
-        let baseQty = new BigNumber(createQty).times(10 ** decimals)
-        baseQty = baseQty.absoluteValue()
-        let baseQtyHex = baseQty.toString(16)
-        baseQtyHex = baseQtyHex.padStart(16, "0")
-
-        let baseChange = new BigNumber(change).times(10 ** decimals)
-        baseChange = baseChange.absoluteValue()
-        let baseChangeHex = baseChange.toString(16)
-        baseChangeHex = baseChangeHex.padStart(16, "0")
-
-        script = [
-          BITBOX.Script.opcodes.OP_RETURN,
-          Buffer.from("534c5000", "hex"),
-          //BITBOX.Script.opcodes.OP_1,
-          Buffer.from("01", "hex"),
-          Buffer.from(`GENESIS`),
-          Buffer.from(baseQtyHex, "hex"),
-          Buffer.from(baseChangeHex, "hex")
-        ]
-      } else {
-        // Corner case, when there is no token change to send back.
-
-        let baseQty = new BigNumber(createQty).times(10 ** decimals)
-        baseQty = baseQty.absoluteValue()
-        let baseQtyHex = baseQty.toString(16)
-        baseQtyHex = baseQtyHex.padStart(16, "0")
-
-        //console.log(`baseQty: ${baseQty.toString()}`)
-
-        script = [
-          BITBOX.Script.opcodes.OP_RETURN,
-          Buffer.from("534c5000", "hex"),
-          //BITBOX.Script.opcodes.OP_1,
-          Buffer.from("01", "hex"),
-          Buffer.from(`GENESIS`),
-          Buffer.from(baseQtyHex, "hex")
-        ]
-      }
-
       return { script, outputs }
     } catch (err) {
       console.log(`Error in generateOpReturn()`)
@@ -353,7 +304,7 @@ class CreateTokens extends Command {
     const name = flags.name
     if (!name || name === "")
       throw new Error(`You must specify a wallet with the -n flag.`)
-
+/*
     const decimals = flags.decimals
     if (!decimals || !Number.isInteger(decimals) || decimals < 0 || decimals > 9)
       throw new Error(`You must specify a decimal integer between 0 to 9 with the -d flag.`)
@@ -377,16 +328,16 @@ class CreateTokens extends Command {
     const tokenName = flags.tokenName
     if (tokenName && typeof tokenName !== "string")
       throw new Error(`You must specify a token name string with the -t flag`)
-
+*/
     return true
   }
 }
 
-CreateTokens.description = `Create SLP tokens.`
+GenesisTokens.description = `Create SLP tokens.`
 
-CreateTokens.flags = {
+GenesisTokens.flags = {
   name: flags.string({ char: "n", description: "Name of wallet" }),
-  decimals: flags.string({ char: "d", description: "Number of decimals"}),
+/*  decimals: flags.string({ char: "d", description: "Number of decimals"}),
   documentURL: flags.string({ char: "u", description: "Token URL"}),
   genesisAddr: flags.string({ char: "a", description: "Cash or SimpleLedger address to create tokens to"
   }),
@@ -394,6 +345,7 @@ CreateTokens.flags = {
   qty: flags.string({ char: "q", decription: "Quantity of tokens to create" }),
   ticker: flags.string({ char: "k", description: "Abbreviation of token name"}),
   tokenName: flags.string({ char: "t", description: "Name of token"})
+*/
 }
 
-module.exports = CreateTokens
+module.exports = GenesisTokens
