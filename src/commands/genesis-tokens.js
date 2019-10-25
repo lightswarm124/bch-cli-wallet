@@ -96,24 +96,24 @@ class GenesisTokens extends Command {
       }
       const utxo = await send.selectUTXO(0.000015, utxos)
       // 1500 satoshis used until a more accurate calculation can be devised.
-      console.log(`selected utxo: ${util.inspect(utxo)}`)
+      //console.log(`selected utxo: ${util.inspect(utxo)}`)
 
       // Exit if there is no UTXO big enough to fulfill the transaction.
-/*      if (!utxo.amount) {
+      if (!utxo.amount) {
         this.log(
           `Could not find a UTXO big enough for this transaction. More BCH needed.`
         )
         return
       }
-      //this.log(utxo.amount)
+      this.log(utxo.amount)
 
       // Generate a new address, for sending change to.
       const getAddress = new GetAddress()
       getAddress.BITBOX = this.BITBOX
       const changeAddress = await getAddress.getAddress(filename)
-      //console.log(`changeAddress: ${changeAddress}`)
+      console.log(`changeAddress: ${changeAddress}`)
 
-*/
+
       // Create the token, transfer change to the new address
 /*      const hex = await this.genesisTokens(
         utxo,
@@ -158,10 +158,6 @@ class GenesisTokens extends Command {
 
       // add input utxo to pay for transaction.
       transactionBuilder.addInput(txid, vout)
-
-      // add each token UTXO as an input.
-      for (let i = 0; i < tokenUtxos.length; i++)
-        transactionBuilder.addInput(tokenUtxos[i].txid, tokenUtxos[i].vout)
 
       // get byte count to calculate fee. paying 1 sat
       // Note: This may not be totally accurate. Just guessing on the byteCount size.
